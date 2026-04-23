@@ -1,0 +1,336 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    var artistaId = 1; // Temporal, después vendrá del login
+}
+
+<div>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsCards">
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Citas Hoy</p>
+                    <p class="text-3xl font-bold text-gray-800" id="citasHoy">-</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span class="text-xl">📅</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Ingresos del Mes</p>
+                    <p class="text-3xl font-bold text-green-600" id="ingresosMes">-</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <span class="text-xl">💰</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Citas Pendientes</p>
+                    <p class="text-3xl font-bold text-yellow-600" id="citasPendientes">-</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span class="text-xl">⏳</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Clientes Nuevos</p>
+                    <p class="text-3xl font-bold text-purple-600" id="nuevosClientes">-</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span class="text-xl">👥</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos y listados -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Citas por estado (gráfico) -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Distribución de Citas</h3>
+            <div class="space-y-3" id="citasPorEstado">
+                <div class="text-center text-gray-500">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- Top artistas -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Artistas por Ingresos</h3>
+            <div class="space-y-4" id="topArtistas">
+                <div class="text-center text-gray-500">Cargando...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Próximas citas -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Próximas Citas</h3>
+            <a href="/Citas" class="text-blue-600 hover:text-blue-800 text-sm">Ver todas →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="tablaProximasCitas">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Artista</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha/Hora</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">Cargando citas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const artistaId = @artistaId;
+
+        // Cargar dashboard completo
+        async function cargarDashboard() {
+            await Promise.all([
+                cargarResumen(),
+                cargarCitasPorEstado(),
+                cargarTopArtistas(),
+                cargarProximasCitas()
+            ]);
+        }
+
+        // 1. Cargar resumen (tarjetas)
+        async function cargarResumen() {
+            try {
+                const response = await fetch(`/api/dashboard/resumen?artistaId=${artistaId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('citasHoy').textContent = data.citasHoy;
+                    document.getElementById('ingresosMes').textContent = `$${data.ingresosMes.toLocaleString()}`;
+                    document.getElementById('citasPendientes').textContent = data.citasPendientes;
+                    document.getElementById('nuevosClientes').textContent = data.nuevosClientesMes;
+                }
+            } catch (error) {
+                console.error('Error cargando resumen:', error);
+            }
+        }
+
+        // 2. Cargar citas por estado (barras)
+        async function cargarCitasPorEstado() {
+            try {
+                const response = await fetch(`/api/citas/artista/${artistaId}/estadisticas`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const estados = result.data;
+                    const container = document.getElementById('citasPorEstado');
+
+                    const colores = {
+                        'pendiente': 'bg-yellow-500',
+                        'confirmada': 'bg-blue-500',
+                        'en_curso': 'bg-purple-500',
+                        'completada': 'bg-green-500',
+                        'cancelada': 'bg-red-500',
+                        'no_asistio': 'bg-gray-500'
+                    };
+
+                    const nombres = {
+                        'pendiente': 'Pendientes',
+                        'confirmada': 'Confirmadas',
+                        'en_curso': 'En curso',
+                        'completada': 'Completadas',
+                        'cancelada': 'Canceladas',
+                        'no_asistio': 'No asistieron'
+                    };
+
+                    const total = Object.values(estados).reduce((a, b) => a + b, 0);
+
+                    let html = '';
+                    for (const [estado, cantidad] of Object.entries(estados)) {
+                        if (cantidad > 0) {
+                            const porcentaje = total > 0 ? (cantidad / total * 100).toFixed(1) : 0;
+                            html += `
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>${nombres[estado] || estado}</span>
+                                        <span>${cantidad} (${porcentaje}%)</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="${colores[estado]} h-2 rounded-full" style="width: ${porcentaje}%"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    container.innerHTML = html || '<div class="text-center text-gray-500">No hay datos</div>';
+                }
+            } catch (error) {
+                console.error('Error cargando estados:', error);
+            }
+        }
+
+        // 3. Cargar top artistas
+        async function cargarTopArtistas() {
+            try {
+                const response = await fetch(`/api/dashboard/resumen?artistaId=${artistaId}`);
+                const result = await response.json();
+
+                if (result.success && result.data.ingresosPorArtista) {
+                    const artistas = result.data.ingresosPorArtista;
+                    const container = document.getElementById('topArtistas');
+
+                    if (artistas.length === 0) {
+                        container.innerHTML = '<div class="text-center text-gray-500">No hay datos</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    artistas.forEach((artista, index) => {
+                        html += `
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold">
+                                        ${index + 1}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-800">${artista.artistaNombre}</p>
+                                        <p class="text-sm text-gray-500">${artista.totalCitas} citas</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold text-green-600">$${artista.totalIngresos.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    container.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error cargando top artistas:', error);
+            }
+        }
+
+        // 4. Cargar próximas citas
+        async function cargarProximasCitas() {
+            try {
+                const response = await fetch(`/api/dashboard/proximas-citas?artistaId=${artistaId}&dias=7`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const citas = result.data;
+                    const tbody = document.querySelector('#tablaProximasCitas tbody');
+
+                    if (citas.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No hay citas próximas</td></tr>';
+                        return;
+                    }
+
+                    const getEstadoBadge = (estado) => {
+                        const badges = {
+                            'pendiente': '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>',
+                            'confirmada': '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Confirmada</span>',
+                            'en_curso': '<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">En curso</span>',
+                            'completada': '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Completada</span>'
+                        };
+                        return badges[estado] || `<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">${estado}</span>`;
+                    };
+
+                    let html = '';
+                    citas.forEach(cita => {
+                        const fecha = new Date(cita.fechaHoraInicio);
+                        const fechaFormateada = fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        const horaFormateada = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        html += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="font-medium text-gray-900">${cita.clienteNombre}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">${cita.artistaNombre}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-gray-900">${fechaFormateada}</div>
+                                    <div class="text-sm text-gray-500">${horaFormateada}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-600">${cita.zonaCuerpo || 'No especificada'}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${getEstadoBadge(cita.estado)}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <button onclick="verCita(${cita.id})" class="text-blue-600 hover:text-blue-800 mr-3">Ver</button>
+                                    <button onclick="cambiarEstado(${cita.id}, 'en_curso')" class="text-green-600 hover:text-green-800">Iniciar</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tbody.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error cargando próximas citas:', error);
+            }
+        }
+
+        function verCita(id) {
+            window.location.href = `/Citas/Detalle/${id}`;
+        }
+
+        async function cambiarEstado(id, nuevoEstado) {
+            const result = await Swal.fire({
+                title: '¿Cambiar estado?',
+                text: `¿Deseas marcar esta cita como "${nuevoEstado}"?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/citas/${id}/estado`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: nuevoEstado })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire('Actualizado', 'El estado de la cita ha sido actualizado', 'success');
+                        cargarDashboard();
+                    } else {
+                        Swal.fire('Error', data.message || 'No se pudo actualizar', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Ocurrió un error al actualizar', 'error');
+                }
+            }
+        }
+
+        // Cargar al iniciar
+        cargarDashboard();
+
+        // Recargar cada 30 segundos
+        setInterval(cargarDashboard, 30000);
+    </script>
+}

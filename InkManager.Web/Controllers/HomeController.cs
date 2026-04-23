@@ -15,7 +15,8 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        // Redirigir al Dashboard
+        return RedirectToAction("Index", "Dashboard");
     }
 
     public IActionResult Privacy()

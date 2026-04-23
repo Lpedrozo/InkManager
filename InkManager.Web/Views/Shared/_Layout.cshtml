@@ -1,49 +1,83 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - InkManager.Web</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/InkManager.Web.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - InkManager</title>
+    <link rel="stylesheet" href="~/css/output.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">InkManager.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body class="bg-gray-50">
+    <!-- Sidebar (menú lateral) -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-900 text-white flex flex-col">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">🖤 InkManager</h1>
+                <p class="text-gray-400 text-sm mt-1">Gestión de Tatuajes</p>
+            </div>
+
+            <nav class="flex-1 mt-6">
+                <a href="/Dashboard" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">📊</span> Dashboard
+                </a>
+                <a href="/Citas" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">📅</span> Mis Citas
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">🎨</span> Artistas
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">👥</span> Clientes
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">💰</span> Pagos
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">⚙️</span> Configuración
+                </a>
+            </nav>
+
+            <div class="p-6 border-t border-gray-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm">👤</span>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">Juan Pérez</p>
+                        <p class="text-xs text-gray-400">Artista</p>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </aside>
+
+        <!-- Contenido principal -->
+        <div class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b">
+                <div class="px-8 py-4 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">@ViewData["Title"]</h2>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-500">Hoy es @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</span>
+                        <button class="text-gray-500 hover:text-gray-700">🔔</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main content -->
+            <main class="p-8">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - InkManager.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- Modales globales -->
+    <div id="modalContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

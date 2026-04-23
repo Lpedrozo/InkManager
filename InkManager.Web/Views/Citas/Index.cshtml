@@ -1,0 +1,365 @@
+﻿@{
+    ViewData["Title"] = "Mis Citas";
+    var artistaId = 1; // Temporal
+}
+
+<div>
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Mis Citas</h1>
+            <p class="text-gray-500 mt-1">Gestiona todas tus citas y sesiones</p>
+        </div>
+        <button onclick="abrirModalCrear()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center">
+            <span class="mr-2">+</span> Nueva Cita
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div class="flex flex-wrap gap-4">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select id="filtroEstado" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Todos</option>
+                    <option value="pendiente">Pendientes</option>
+                    <option value="confirmada">Confirmadas</option>
+                    <option value="en_curso">En curso</option>
+                    <option value="completada">Completadas</option>
+                    <option value="cancelada">Canceladas</option>
+                </select>
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha desde</label>
+                <input type="date" id="filtroFechaInicio" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha hasta</label>
+                <input type="date" id="filtroFechaFin" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+            </div>
+            <div class="flex items-end">
+                <button onclick="cargarCitas()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition">
+                    🔍 Filtrar
+                </button>
+                <button onclick="limpiarFiltros()" class="ml-2 text-gray-500 hover:text-gray-700 px-4 py-2">
+                    Limpiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de citas -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha/Hora</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zona</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaCitas" class="divide-y divide-gray-200">
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-500">Cargando citas...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+            <div class="text-sm text-gray-500" id="paginacionInfo"></div>
+            <div class="flex space-x-2" id="paginacionBotones"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para crear cita -->
+<div id="modalCrear" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b">
+            <h2 class="text-xl font-bold">Nueva Cita</h2>
+        </div>
+        <div class="p-6">
+            <form id="formCrearCita">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+                        <select id="clienteId" class="w-full rounded-lg border-gray-300" required>
+                            <option value="">Seleccionar cliente</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Artista *</label>
+                        <select id="artistaId" class="w-full rounded-lg border-gray-300" required>
+                            <option value="">Seleccionar artista</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora Inicio *</label>
+                        <input type="datetime-local" id="fechaHoraInicio" class="w-full rounded-lg border-gray-300" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha y Hora Fin *</label>
+                        <input type="datetime-local" id="fechaHoraFin" class="w-full rounded-lg border-gray-300" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Total</label>
+                        <input type="number" step="0.01" id="precioTotal" class="w-full rounded-lg border-gray-300" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Adelanto</label>
+                        <input type="number" step="0.01" id="adelanto" class="w-full rounded-lg border-gray-300" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Zona del Cuerpo</label>
+                        <select id="zonaCuerpoId" class="w-full rounded-lg border-gray-300">
+                            <option value="">Seleccionar zona</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tamaño (cm)</label>
+                        <input type="number" step="0.1" id="tamanioCm" class="w-full rounded-lg border-gray-300" placeholder="0.0">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notas Internas</label>
+                        <textarea id="notasInternas" rows="3" class="w-full rounded-lg border-gray-300" placeholder="Notas para el artista..."></textarea>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="requiereRecordatorio" class="rounded border-gray-300 text-blue-600" checked>
+                            <span class="ml-2 text-sm text-gray-700">Enviar recordatorio por email</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="p-6 border-t flex justify-end space-x-3">
+            <button onclick="cerrarModalCrear()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
+            <button onclick="guardarCita()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">Guardar</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let paginaActual = 1;
+        let filtrosActuales = {};
+
+        // Cargar listado de citas
+        async function cargarCitas(pagina = 1) {
+            paginaActual = pagina;
+
+            const estado = document.getElementById('filtroEstado').value;
+            const fechaInicio = document.getElementById('filtroFechaInicio').value;
+            const fechaFin = document.getElementById('filtroFechaFin').value;
+
+            filtrosActuales = { estado, fechaInicio, fechaFin };
+
+            let url = `/api/citas?artistaId=${@artistaId}&pagina=${pagina}&pageSize=10`;
+            if (estado) url += `&estado=${estado}`;
+            if (fechaInicio) url += `&fechaInicio=${fechaInicio}`;
+            if (fechaFin) url += `&fechaFin=${fechaFin}`;
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderizarTabla(result.data.items);
+                    renderizarPaginacion(result.data);
+                }
+            } catch (error) {
+                console.error('Error cargando citas:', error);
+            }
+        }
+
+        function renderizarTabla(citas) {
+            const tbody = document.getElementById('tablaCitas');
+
+            if (!citas || citas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">No hay citas para mostrar</td></tr>';
+                return;
+            }
+
+            const getEstadoBadge = (estado) => {
+                const badges = {
+                    'pendiente': '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Pendiente</span>',
+                    'confirmada': '<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Confirmada</span>',
+                    'en_curso': '<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">En curso</span>',
+                    'completada': '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Completada</span>',
+                    'cancelada': '<span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Cancelada</span>',
+                    'no_asistio': '<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">No asistió</span>'
+                };
+                return badges[estado] || `<span class="px-2 py-1 text-xs rounded-full bg-gray-100">${estado}</span>`;
+            };
+
+            let html = '';
+            citas.forEach(cita => {
+                const fecha = new Date(cita.fechaHoraInicio);
+                const fechaFormateada = fecha.toLocaleDateString('es-ES');
+                const horaFormateada = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="verDetalle(${cita.id})">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">${cita.clienteNombre}</div>
+                            <div class="text-sm text-gray-500">${cita.clienteTelefono}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-gray-900">${fechaFormateada}</div>
+                            <div class="text-sm text-gray-500">${horaFormateada}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${cita.zonaCuerpo || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium">$${cita.precioTotal}</div>
+                            <div class="text-sm text-gray-500">Saldo: $${cita.saldoPendiente}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${getEstadoBadge(cita.estado)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap" onclick="event.stopPropagation()">
+                            <button onclick="verDetalle(${cita.id})" class="text-blue-600 hover:text-blue-800 mr-3">👁️ Ver</button>
+                            <button onclick="cambiarEstado(${cita.id}, 'completada')" class="text-green-600 hover:text-green-800">✓ Completar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function renderizarPaginacion(data) {
+            const infoDiv = document.getElementById('paginacionInfo');
+            const botonesDiv = document.getElementById('paginacionBotones');
+
+            infoDiv.textContent = `Mostrando ${data.items.length} de ${data.totalCount} citas`;
+
+            let botones = '';
+            if (data.hasPreviousPage) {
+                botones += `<button onclick="cargarCitas(${data.pageNumber - 1})" class="px-3 py-1 border rounded hover:bg-gray-50">Anterior</button>`;
+            }
+
+            botones += `<span class="px-3 py-1">Página ${data.pageNumber} de ${data.totalPages}</span>`;
+
+            if (data.hasNextPage) {
+                botones += `<button onclick="cargarCitas(${data.pageNumber + 1})" class="px-3 py-1 border rounded hover:bg-gray-50">Siguiente</button>`;
+            }
+
+            botonesDiv.innerHTML = botones;
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroEstado').value = '';
+            document.getElementById('filtroFechaInicio').value = '';
+            document.getElementById('filtroFechaFin').value = '';
+            cargarCitas(1);
+        }
+
+        function verDetalle(id) {
+            window.location.href = `/Citas/Detalle/${id}`;
+        }
+
+        async function cambiarEstado(id, nuevoEstado) {
+            const result = await Swal.fire({
+                title: '¿Cambiar estado?',
+                text: `¿Deseas marcar esta cita como "${nuevoEstado}"?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, cambiar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/citas/${id}/estado`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: nuevoEstado })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire('Actualizado', 'Estado actualizado correctamente', 'success');
+                        cargarCitas(paginaActual);
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Ocurrió un error', 'error');
+                }
+            }
+        }
+
+        // Modal crear cita
+        async function abrirModalCrear() {
+            await cargarSelectores();
+            document.getElementById('modalCrear').classList.remove('hidden');
+            document.getElementById('modalCrear').classList.add('flex');
+        }
+
+        function cerrarModalCrear() {
+            document.getElementById('modalCrear').classList.add('hidden');
+            document.getElementById('modalCrear').classList.remove('flex');
+            document.getElementById('formCrearCita').reset();
+        }
+
+        async function cargarSelectores() {
+            // Cargar artistas
+            const artistasResp = await fetch('/api/artistas'); // Necesitarás crear este endpoint
+            const artistas = await artistasResp.json();
+
+            // Cargar clientes
+            const clientesResp = await fetch('/api/clientes'); // Necesitarás crear este endpoint
+            const clientes = await clientesResp.json();
+
+            // Cargar zonas cuerpo
+            const zonasResp = await fetch('/api/zonas-cuerpo'); // Necesitarás crear este endpoint
+            const zonas = await zonasResp.json();
+
+            // Llenar selects (simplificado)
+        }
+
+        async function guardarCita() {
+            const data = {
+                clienteId: parseInt(document.getElementById('clienteId').value),
+                artistaId: parseInt(document.getElementById('artistaId').value),
+                fechaHoraInicio: document.getElementById('fechaHoraInicio').value,
+                fechaHoraFin: document.getElementById('fechaHoraFin').value,
+                precioTotal: parseFloat(document.getElementById('precioTotal').value) || 0,
+                adelanto: parseFloat(document.getElementById('adelanto').value) || 0,
+                zonaCuerpoId: parseInt(document.getElementById('zonaCuerpoId').value) || null,
+                tamanioCm: parseFloat(document.getElementById('tamanioCm').value) || null,
+                notasInternas: document.getElementById('notasInternas').value,
+                requiereRecordatorio: document.getElementById('requiereRecordatorio').checked
+            };
+
+            try {
+                const response = await fetch('/api/citas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire('Éxito', 'Cita creada correctamente', 'success');
+                    cerrarModalCrear();
+                    cargarCitas(1);
+                } else {
+                    Swal.fire('Error', result.message || 'No se pudo crear la cita', 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Ocurrió un error al guardar', 'error');
+            }
+        }
+
+        // Inicializar
+        cargarCitas();
+    </script>
+}

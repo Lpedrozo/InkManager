@@ -1,4 +1,6 @@
 using InkManager.Infrastructure.Data;
+using InkManager.Services.Implementations;
+using InkManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configurar DbContext con SQL Server
+// Configurar DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -14,8 +16,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     )
 );
 
-// Registrar servicios (los agregaremos después)
-// builder.Services.AddScoped<ICitaService, CitaService>();
+// Registrar servicios
+builder.Services.AddScoped<ICitaService, CitaService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 var app = builder.Build();
 
@@ -31,11 +34,22 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
+// Mapear controladores de API
+app.MapControllers();
+
+// Mapear rutas MVC (por orden de especificidad)
+app.MapControllerRoute(
+    name: "dashboard",
+    pattern: "dashboard",
+    defaults: new { controller = "Dashboard", action = "Index" });
+
+app.MapControllerRoute(
+    name: "citas",
+    pattern: "citas/{action=Index}/{id?}",
+    defaults: new { controller = "Citas", action = "Index" });
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Mapear controladores de API
-app.MapControllers();
 
 app.Run();
