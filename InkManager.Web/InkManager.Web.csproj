@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\InkManager.Services\InkManager.Services.csproj" />
+    <ProjectReference Include="..\InkManager.Core\InkManager.Core.csproj" />
+    <ProjectReference Include="..\InkManager.Infrastructure\InkManager.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
