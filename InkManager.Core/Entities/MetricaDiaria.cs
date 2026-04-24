@@ -15,10 +15,10 @@ namespace InkManager.Core.Entities
 
         // Foreign keys
         public int EstudioId { get; set; }
-        public int ArtistaId { get; set; }
+        public int UsuarioId { get; set; }
 
         // Navigation properties
         public virtual Estudio Estudio { get; set; } = null!;
-        public virtual Artista Artista { get; set; } = null!;
+        public virtual Usuario Usuario { get; set; } = null!;
     }
 }

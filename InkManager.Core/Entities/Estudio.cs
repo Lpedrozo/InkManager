@@ -27,7 +27,7 @@ namespace InkManager.Core.Entities
         public string? ConfiguracionJson { get; set; }
 
         // Navigation properties
-        public virtual ICollection<Artista> Artistas { get; set; } = new List<Artista>();
+        public virtual ICollection<EstudioUsuario> EstudioUsuarios { get; set; } = new List<EstudioUsuario>();
         public virtual ICollection<Cubiculo> Cubiculos { get; set; } = new List<Cubiculo>();
         public virtual ICollection<ConfiguracionCorreo> ConfiguracionesCorreo { get; set; } = new List<ConfiguracionCorreo>();
     }

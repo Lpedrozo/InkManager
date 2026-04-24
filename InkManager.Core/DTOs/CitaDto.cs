@@ -5,11 +5,11 @@ namespace InkManager.Core.DTOs
     public class CitaDto
     {
         public int Id { get; set; }
-        public int ClienteId { get; set; }
+        public int UsuarioId { get; set; }
         public string ClienteNombre { get; set; } = string.Empty;
         public string ClienteEmail { get; set; } = string.Empty;
         public string ClienteTelefono { get; set; } = string.Empty;
-        public int ArtistaId { get; set; }
+        public int ArtistaReferenciaId { get; set; }
         public string ArtistaNombre { get; set; } = string.Empty;
         public int? AsistenteId { get; set; }
         public string? AsistenteNombre { get; set; }
@@ -34,10 +34,10 @@ namespace InkManager.Core.DTOs
     public class CrearCitaDto
     {
         [Required]
-        public int ClienteId { get; set; }
+        public int UsuarioId { get; set; }
 
         [Required]
-        public int ArtistaId { get; set; }
+        public int ArtistaReferenciaId { get; set; }
 
         public int? AsistenteId { get; set; }
 
@@ -94,12 +94,12 @@ namespace InkManager.Core.DTOs
 
     public class FiltroCitasDto
     {
-        public int? ArtistaId { get; set; }
+        public int? ArtistaReferenciaId { get; set; }
         public int? EstudioId { get; set; }
         public string? Estado { get; set; }
         public DateTime? FechaInicio { get; set; }
         public DateTime? FechaFin { get; set; }
-        public int? ClienteId { get; set; }
+        public int? UsuarioId { get; set; }
         public int Pagina { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public string? OrderBy { get; set; } = "FechaHoraInicio";

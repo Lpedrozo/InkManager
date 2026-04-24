@@ -19,9 +19,8 @@ namespace InkManager.Services.Implementations
         public async Task<CitaDto?> GetByIdAsync(int id)
         {
             var cita = await _context.Citas
-                .Include(c => c.Cliente)
-                .Include(c => c.Artista)
-                .Include(c => c.Asistente)
+                .Include(c => c.Usuario)  // Cliente
+                .Include(c => c.ArtistaReferencia)  // Artista
                 .Include(c => c.ZonaCuerpo)
                 .Include(c => c.PagosParciales)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.EliminadoLogico);
@@ -33,16 +32,15 @@ namespace InkManager.Services.Implementations
 
         public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
         {
-            // Validar disponibilidad
-            var disponible = await ValidarDisponibilidadAsync(dto.ArtistaId, dto.FechaHoraInicio, dto.FechaHoraFin);
+            // Validar disponibilidad del artista
+            var disponible = await ValidarDisponibilidadAsync(dto.ArtistaReferenciaId, dto.FechaHoraInicio, dto.FechaHoraFin);
             if (!disponible)
                 throw new InvalidOperationException("El artista no está disponible en ese horario");
 
             var cita = new Cita
             {
-                ClienteId = dto.ClienteId,
-                ArtistaId = dto.ArtistaId,
-                AsistenteId = dto.AsistenteId,
+                UsuarioId = dto.UsuarioId,  // Cliente
+                ArtistaReferenciaId = dto.ArtistaReferenciaId,  // Artista
                 FechaHoraInicio = dto.FechaHoraInicio,
                 FechaHoraFin = dto.FechaHoraFin,
                 PrecioTotal = dto.PrecioTotal,
@@ -84,7 +82,7 @@ namespace InkManager.Services.Implementations
             // Si cambia el horario, validar disponibilidad
             if (dto.FechaHoraInicio.HasValue && dto.FechaHoraFin.HasValue)
             {
-                var disponible = await ValidarDisponibilidadAsync(cita.ArtistaId, dto.FechaHoraInicio.Value, dto.FechaHoraFin.Value, id);
+                var disponible = await ValidarDisponibilidadAsync(cita.ArtistaReferenciaId, dto.FechaHoraInicio.Value, dto.FechaHoraFin.Value, id);
                 if (!disponible)
                     throw new InvalidOperationException("El artista no está disponible en ese horario");
 
@@ -93,7 +91,6 @@ namespace InkManager.Services.Implementations
             }
 
             // Actualizar campos
-            if (dto.AsistenteId.HasValue) cita.AsistenteId = dto.AsistenteId;
             if (dto.PrecioTotal.HasValue) cita.PrecioTotal = dto.PrecioTotal.Value;
             if (dto.ZonaCuerpoId.HasValue) cita.ZonaCuerpoId = dto.ZonaCuerpoId;
             if (dto.TamanioCm.HasValue) cita.TamanioCm = dto.TamanioCm;
@@ -171,13 +168,6 @@ namespace InkManager.Services.Implementations
             _context.PagosParciales.Add(pago);
             await _context.SaveChangesAsync();
 
-            // Si el pago completa el saldo, sugerir cambio de estado (opcional)
-            var saldo = await GetSaldoPendienteAsync(citaId);
-            if (saldo <= 0 && cita.Estado == "confirmada")
-            {
-                // Podría marcarse automáticamente como pagada si quieres
-            }
-
             return await GetSaldoPendienteAsync(citaId);
         }
 
@@ -203,6 +193,7 @@ namespace InkManager.Services.Implementations
             return pagos.Select(p => new PagoParcialDto
             {
                 Id = p.Id,
+                CitaId = p.CitaId,
                 Monto = p.Monto,
                 FechaPago = p.FechaPago,
                 MetodoPago = p.MetodoPago,
@@ -214,24 +205,25 @@ namespace InkManager.Services.Implementations
         public async Task<PagedResult<CitaDto>> GetCitasFiltradasAsync(FiltroCitasDto filtro)
         {
             var query = _context.Citas
-                .Include(c => c.Cliente)
-                .Include(c => c.Artista)
-                .Include(c => c.Asistente)
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
+                .ThenInclude(a => a.EstudioUsuarios)  // Agregar esto para acceder a estudios
                 .Include(c => c.ZonaCuerpo)
                 .Where(c => !c.EliminadoLogico);
 
             // Aplicar filtros
-            if (filtro.ArtistaId.HasValue)
-                query = query.Where(c => c.ArtistaId == filtro.ArtistaId.Value);
+            if (filtro.ArtistaReferenciaId.HasValue)
+                query = query.Where(c => c.ArtistaReferenciaId == filtro.ArtistaReferenciaId.Value);
 
+            // CORREGIDO: Filtrar por estudio usando la tabla puente
             if (filtro.EstudioId.HasValue)
-                query = query.Where(c => c.Artista!.EstudioId == filtro.EstudioId.Value);
+                query = query.Where(c => c.ArtistaReferencia!.EstudioUsuarios.Any(eu => eu.EstudioId == filtro.EstudioId.Value));
 
             if (!string.IsNullOrEmpty(filtro.Estado))
                 query = query.Where(c => c.Estado == filtro.Estado);
 
-            if (filtro.ClienteId.HasValue)
-                query = query.Where(c => c.ClienteId == filtro.ClienteId.Value);
+            if (filtro.UsuarioId.HasValue)
+                query = query.Where(c => c.UsuarioId == filtro.UsuarioId.Value);
 
             if (filtro.FechaInicio.HasValue)
                 query = query.Where(c => c.FechaHoraInicio >= filtro.FechaInicio.Value);
@@ -265,10 +257,10 @@ namespace InkManager.Services.Implementations
             var fechaConsulta = fecha?.Date ?? DateTime.UtcNow.Date;
 
             var citas = await _context.Citas
-                .Include(c => c.Cliente)
-                .Include(c => c.Artista)
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
                 .Include(c => c.ZonaCuerpo)
-                .Where(c => c.ArtistaId == artistaId
+                .Where(c => c.ArtistaReferenciaId == artistaId
                     && c.FechaHoraInicio.Date == fechaConsulta
                     && !c.EliminadoLogico
                     && c.Estado != "cancelada")
@@ -281,10 +273,10 @@ namespace InkManager.Services.Implementations
         public async Task<List<CitaDto>> GetCitasDelArtistaAsync(int artistaId, DateTime? fechaInicio = null, DateTime? fechaFin = null)
         {
             var query = _context.Citas
-                .Include(c => c.Cliente)
-                .Include(c => c.Artista)
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
                 .Include(c => c.ZonaCuerpo)
-                .Where(c => c.ArtistaId == artistaId && !c.EliminadoLogico);
+                .Where(c => c.ArtistaReferenciaId == artistaId && !c.EliminadoLogico);
 
             if (fechaInicio.HasValue)
                 query = query.Where(c => c.FechaHoraInicio >= fechaInicio.Value);
@@ -302,10 +294,10 @@ namespace InkManager.Services.Implementations
         public async Task<List<CitaDto>> GetCitasDelClienteAsync(int clienteId)
         {
             var citas = await _context.Citas
-                .Include(c => c.Cliente)
-                .Include(c => c.Artista)
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
                 .Include(c => c.ZonaCuerpo)
-                .Where(c => c.ClienteId == clienteId && !c.EliminadoLogico)
+                .Where(c => c.UsuarioId == clienteId && !c.EliminadoLogico)
                 .OrderByDescending(c => c.FechaHoraInicio)
                 .ToListAsync();
 
@@ -315,7 +307,7 @@ namespace InkManager.Services.Implementations
         public async Task<int> GetCountByEstadoAsync(int artistaId, string estado)
         {
             return await _context.Citas
-                .CountAsync(c => c.ArtistaId == artistaId && c.Estado == estado && !c.EliminadoLogico);
+                .CountAsync(c => c.ArtistaReferenciaId == artistaId && c.Estado == estado && !c.EliminadoLogico);
         }
 
         public async Task<Dictionary<string, int>> GetEstadisticasPorEstadoAsync(int artistaId)
@@ -335,7 +327,7 @@ namespace InkManager.Services.Implementations
         public async Task<decimal> GetIngresosPorArtistaAsync(int artistaId, DateTime? fechaInicio = null, DateTime? fechaFin = null)
         {
             var query = _context.Citas
-                .Where(c => c.ArtistaId == artistaId && c.Estado == "completada" && !c.EliminadoLogico);
+                .Where(c => c.ArtistaReferenciaId == artistaId && c.Estado == "completada" && !c.EliminadoLogico);
 
             if (fechaInicio.HasValue)
                 query = query.Where(c => c.FechaHoraInicio >= fechaInicio.Value);
@@ -349,7 +341,7 @@ namespace InkManager.Services.Implementations
         public async Task<bool> ValidarDisponibilidadAsync(int artistaId, DateTime inicio, DateTime fin, int? citaIdExcluir = null)
         {
             var query = _context.Citas
-                .Where(c => c.ArtistaId == artistaId
+                .Where(c => c.ArtistaReferenciaId == artistaId
                     && !c.EliminadoLogico
                     && c.Estado != "cancelada"
                     && ((inicio >= c.FechaHoraInicio && inicio < c.FechaHoraFin)
@@ -365,7 +357,7 @@ namespace InkManager.Services.Implementations
         public async Task<List<TimeSpan>> GetHorasOcupadasAsync(int artistaId, DateTime fecha)
         {
             var citas = await _context.Citas
-                .Where(c => c.ArtistaId == artistaId
+                .Where(c => c.ArtistaReferenciaId == artistaId
                     && c.FechaHoraInicio.Date == fecha.Date
                     && !c.EliminadoLogico
                     && c.Estado != "cancelada")
@@ -411,14 +403,12 @@ namespace InkManager.Services.Implementations
             return new CitaDto
             {
                 Id = cita.Id,
-                ClienteId = cita.ClienteId,
-                ClienteNombre = cita.Cliente?.Nombre ?? string.Empty,
-                ClienteEmail = cita.Cliente?.Email ?? string.Empty,
-                ClienteTelefono = cita.Cliente?.Telefono ?? string.Empty,
-                ArtistaId = cita.ArtistaId,
-                ArtistaNombre = cita.Artista?.Nombre ?? string.Empty,
-                AsistenteId = cita.AsistenteId,
-                AsistenteNombre = cita.Asistente?.Nombre,
+                UsuarioId = cita.UsuarioId,
+                ClienteNombre = cita.Usuario?.Nombre ?? string.Empty,
+                ClienteEmail = cita.Usuario?.Email ?? string.Empty,
+                ClienteTelefono = cita.Usuario?.Telefono ?? string.Empty,
+                ArtistaReferenciaId = cita.ArtistaReferenciaId,
+                ArtistaNombre = cita.ArtistaReferencia?.Nombre ?? string.Empty,
                 FechaHoraInicio = cita.FechaHoraInicio,
                 FechaHoraFin = cita.FechaHoraFin,
                 Estado = cita.Estado,
@@ -432,7 +422,7 @@ namespace InkManager.Services.Implementations
                 NotasInternas = cita.NotasInternas,
                 NotasPublicas = cita.NotasPublicas,
                 RequiereRecordatorio = cita.RequiereRecordatorio,
-                FechaRecordatorioEnviado = cita.FechaRecordatorioEnviado
+                FechaRecordatorioEnviado = cita.FechaRecordatorioEnviado,
             };
         }
     }

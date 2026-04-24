@@ -35,17 +35,17 @@ namespace InkManager.Core.Entities
 
         public DateTime? FechaRecordatorioEnviado { get; set; }
 
-        // Foreign keys
-        public int ClienteId { get; set; }
-        public int ArtistaId { get; set; }
-        public int? AsistenteId { get; set; }
+        // Foreign keys - NUEVAS (reemplazan ClienteId, ArtistaId, AsistenteId)
+        public int UsuarioId { get; set; } // Cliente que agenda
+        public int ArtistaReferenciaId { get; set; } // Artista que atiende
         public int? ZonaCuerpoId { get; set; }
 
-        // Navigation properties
-        public virtual Cliente Cliente { get; set; } = null!;
-        public virtual Artista Artista { get; set; } = null!;
-        public virtual Asistente? Asistente { get; set; }
+        // Navigation properties - NUEVAS
+        public virtual Usuario Usuario { get; set; } = null!; // Cliente
+        public virtual Usuario ArtistaReferencia { get; set; } = null!; // Artista
         public virtual ZonaCuerpo? ZonaCuerpo { get; set; }
+
+        // Colecciones
         public virtual ICollection<PagoParcial> PagosParciales { get; set; } = new List<PagoParcial>();
         public virtual ICollection<HistorialEstadoCita> HistorialEstados { get; set; } = new List<HistorialEstadoCita>();
     }
