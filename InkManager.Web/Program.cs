@@ -2,6 +2,9 @@ using InkManager.Infrastructure.Data;
 using InkManager.Services.Implementations;
 using InkManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,26 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Registrar servicios
 builder.Services.AddScoped<ICitaService, CitaService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Configurar JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "InkManagerSecretKey2024VeryLongAndSecure!!!"))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -32,24 +55,21 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
-// Mapear controladores de API
+// Solo necesitas esto - las rutas ya están definidas en los atributos de los controladores
 app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "auth",
+    pattern: "login",
+    defaults: new { controller = "Auth", action = "Login" });
 
-// Mapear rutas MVC (por orden de especificidad)
 app.MapControllerRoute(
     name: "dashboard",
     pattern: "dashboard",
     defaults: new { controller = "Dashboard", action = "Index" });
-
-app.MapControllerRoute(
-    name: "citas",
-    pattern: "citas/{action=Index}/{id?}",
-    defaults: new { controller = "Citas", action = "Index" });
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
 app.Run();

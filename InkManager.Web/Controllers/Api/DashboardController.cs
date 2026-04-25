@@ -1,10 +1,8 @@
 ﻿using InkManager.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace InkManager.Web.Controllers.Api
+namespace InkManager.Web.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
     public class DashboardController : Controller
     {
         private readonly IDashboardService _dashboardService;
@@ -13,29 +11,32 @@ namespace InkManager.Web.Controllers.Api
         {
             _dashboardService = dashboardService;
         }
+
+        // GET: /dashboard - Muestra la vista
+        [HttpGet("/dashboard")]
         public IActionResult Index()
         {
-            ViewData["Title"] = "Dashboard";
             return View("~/Views/Dashboard/Index.cshtml");
         }
-        // GET: api/dashboard/resumen?artistaId=1
-        [HttpGet("resumen")]
+
+        // GET: /api/dashboard/resumen
+        [HttpGet("/api/dashboard/resumen")]
         public async Task<IActionResult> GetResumen(int? artistaId = null, int? estudioId = null)
         {
             var resumen = await _dashboardService.GetResumenAsync(artistaId, estudioId);
             return Ok(new { success = true, data = resumen });
         }
 
-        // GET: api/dashboard/proximas-citas?artistaId=1&dias=7
-        [HttpGet("proximas-citas")]
+        // GET: /api/dashboard/proximas-citas
+        [HttpGet("/api/dashboard/proximas-citas")]
         public async Task<IActionResult> GetProximasCitas(int? artistaId = null, int dias = 7)
         {
             var citas = await _dashboardService.GetProximasCitasAsync(artistaId, dias);
             return Ok(new { success = true, data = citas });
         }
 
-        // GET: api/dashboard/exportar?fechaInicio=2024-01-01&fechaFin=2024-12-31&artistaId=1
-        [HttpGet("exportar")]
+        // GET: /api/dashboard/exportar
+        [HttpGet("/api/dashboard/exportar")]
         public async Task<IActionResult> ExportarReporte(DateTime fechaInicio, DateTime fechaFin, int? artistaId = null)
         {
             var reporte = await _dashboardService.ExportarReporteCitasAsync(fechaInicio, fechaFin, artistaId);

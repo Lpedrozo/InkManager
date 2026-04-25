@@ -29,7 +29,66 @@ namespace InkManager.Services.Implementations
 
             return MapToDto(cita);
         }
+        // Método para obtener clientes disponibles
+        public async Task<List<UsuarioDto>> GetClientesAsync()
+        {
+            var clientes = await _context.Usuarios
+                .Include(u => u.UsuarioRoles)
+                .ThenInclude(ur => ur.Rol)
+                .Where(u => u.UsuarioRoles.Any(ur => ur.Rol.Nombre == "cliente")
+                    && u.Activo && !u.EliminadoLogico)
+                .Select(u => new UsuarioDto
+                {
+                    Id = u.Id,
+                    Nombre = u.Nombre,
+                    Email = u.Email,
+                    Telefono = u.Telefono
+                })
+                .OrderBy(u => u.Nombre)
+                .ToListAsync();
 
+            return clientes;
+        }
+
+        // Método para obtener horarios disponibles
+        public async Task<List<TimeSlotDto>> GetHorariosDisponiblesAsync(int artistaId, DateTime fecha)
+        {
+            var citasDelDia = await _context.Citas
+                .Where(c => c.ArtistaReferenciaId == artistaId
+                    && c.FechaHoraInicio.Date == fecha.Date
+                    && c.Estado != "cancelada"
+                    && !c.EliminadoLogico)
+                .Select(c => new { c.FechaHoraInicio, c.FechaHoraFin })
+                .ToListAsync();
+
+            var horariosDisponibles = new List<TimeSlotDto>();
+            var horaInicio = new TimeSpan(9, 0, 0); // 9 AM
+            var horaFin = new TimeSpan(20, 0, 0); // 8 PM
+            var duracion = TimeSpan.FromHours(1); // 1 hora por slot
+
+            for (var hora = horaInicio; hora < horaFin; hora = hora.Add(duracion))
+            {
+                var slotInicio = fecha.Date.Add(hora);
+                var slotFin = slotInicio.Add(duracion);
+
+                var ocupado = citasDelDia.Any(c =>
+                    (slotInicio >= c.FechaHoraInicio && slotInicio < c.FechaHoraFin) ||
+                    (slotFin > c.FechaHoraInicio && slotFin <= c.FechaHoraFin) ||
+                    (slotInicio <= c.FechaHoraInicio && slotFin >= c.FechaHoraFin));
+
+                if (!ocupado)
+                {
+                    horariosDisponibles.Add(new TimeSlotDto
+                    {
+                        HoraInicio = hora,
+                        HoraFin = hora.Add(duracion),
+                        Disponible = true
+                    });
+                }
+            }
+
+            return horariosDisponibles;
+        }
         public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
         {
             // Validar disponibilidad del artista

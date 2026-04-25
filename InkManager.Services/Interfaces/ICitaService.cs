@@ -15,7 +15,8 @@ namespace InkManager.Services.Interfaces
         Task<bool> CambiarEstadoAsync(int id, CambiarEstadoDto dto, string usuarioTipo, int usuarioId);
         Task<bool> CancelarCitaAsync(int id, string motivo, string usuarioTipo, int usuarioId);
         Task<bool> MarcarComoNoAsistioAsync(int id, string usuarioTipo, int usuarioId);
-
+        Task<List<TimeSlotDto>> GetHorariosDisponiblesAsync(int artistaId, DateTime fecha);  // ← Agrega esta línea
+        Task<List<UsuarioDto>> GetClientesAsync();
         // Pagos
         Task<decimal> RegistrarPagoAsync(int citaId, RegistrarPagoDto dto);
         Task<decimal> GetSaldoPendienteAsync(int citaId);
