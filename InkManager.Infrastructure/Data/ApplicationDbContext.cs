@@ -49,8 +49,12 @@ namespace InkManager.Infrastructure.Data
             // ============================================
             modelBuilder.Entity<Usuario>()
                 .HasIndex(u => u.Email)
-                .IsUnique();
-
+                .IsUnique()
+                .HasFilter("[Email] IS NOT NULL");
+            modelBuilder.Entity<Usuario>()
+                .HasIndex(u => u.Telefono)
+                .IsUnique()
+                .HasFilter("[Telefono] IS NOT NULL");
             // ============================================
             // Configuración de UsuarioRol (muchos a muchos)
             // ============================================

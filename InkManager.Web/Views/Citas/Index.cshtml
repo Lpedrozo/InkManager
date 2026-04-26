@@ -4,13 +4,13 @@
 }
 
 <div class="container mx-auto px-4 py-6">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <!-- Header responsive -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Gestión de Citas</h1>
             <p class="text-gray-500 mt-1">Agenda y gestiona tus citas de tatuajes</p>
         </div>
-        <button onclick="abrirModalCrear()" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center shadow-md">
+        <button onclick="abrirModalCrear()" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center shadow-md w-full sm:w-auto justify-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -18,14 +18,14 @@
         </button>
     </div>
 
-    <!-- Calendario -->
-    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <!-- Calendario (responsive) -->
+    <div class="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-6 overflow-x-auto">
         <div id="calendar"></div>
     </div>
 
     <!-- Listado de citas -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div class="px-4 md:px-6 py-4 border-b border-gray-200 bg-gray-50">
             <h2 class="text-lg font-semibold text-gray-800">Próximas Citas</h2>
         </div>
         <div id="listaCitas" class="divide-y divide-gray-200">
@@ -34,10 +34,11 @@
     </div>
 </div>
 
-<!-- MODAL CREAR CITA -->
+<!-- MODAL CREAR CITA (responsive) -->
+<!-- MODAL CREAR CITA (con inputs corregidos) -->
 <div id="modalCrear" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-        <div class="p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
+        <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold text-gray-800">📅 Agendar Nueva Cita</h2>
                 <button onclick="cerrarModalCrear()" class="text-gray-400 hover:text-gray-600 transition">
@@ -48,7 +49,7 @@
             </div>
         </div>
 
-        <div class="p-6">
+        <div class="p-4 md:p-6">
             <form id="formCita" onsubmit="return false;">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <!-- Columna izquierda -->
@@ -57,16 +58,25 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1">
                                 Cliente <span class="text-red-500">*</span>
                             </label>
-                            <select id="clienteId" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" required>
-                                <option value="">-- Seleccionar cliente --</option>
-                            </select>
+                            <div class="flex gap-2">
+                                <select id="clienteId" class="flex-1 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                                    <option value="">-- Seleccionar cliente --</option>
+                                </select>
+                                <button type="button" onclick="abrirModalClienteRapido()"
+                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition flex items-center"
+                                        title="Nuevo Cliente">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">
                                 Artista <span class="text-red-500">*</span>
                             </label>
-                            <select id="artistaId" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" required>
+                            <select id="artistaId" required>
                                 <option value="">-- Seleccionar artista --</option>
                             </select>
                         </div>
@@ -76,13 +86,13 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">
                                     Fecha <span class="text-red-500">*</span>
                                 </label>
-                                <input type="date" id="fechaCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" required>
+                                <input type="date" id="fechaCita" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">
                                     Hora <span class="text-red-500">*</span>
                                 </label>
-                                <select id="horaCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" required disabled>
+                                <select id="horaCita" required disabled>
                                     <option value="">Primero selecciona artista y fecha</option>
                                 </select>
                             </div>
@@ -90,7 +100,7 @@
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Duración</label>
-                            <select id="duracion" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm">
+                            <select id="duracion">
                                 <option value="1">1 hora</option>
                                 <option value="2">2 horas</option>
                                 <option value="3">3 horas</option>
@@ -103,43 +113,40 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Precio Total</label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-2 text-gray-500">$</span>
-                                    <input type="number" step="0.01" id="precioTotal" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" placeholder="0.00">
+                                <div class="input-with-icon">
+                                    <input type="number" step="0.01" id="precioTotal" placeholder="0.00">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Adelanto</label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-2 text-gray-500">$</span>
-                                    <input type="number" step="0.01" id="adelanto" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" placeholder="0.00">
+                                <div class="input-with-icon">
+                                    <input type="number" step="0.01" id="adelanto" placeholder="0.00">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Tamaño (cm)</label>
-                                <input type="number" step="0.1" id="tamanioCm" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" placeholder="0.0">
+                                <input type="number" step="0.1" id="tamanioCm" placeholder="0.0">
                             </div>
                             <div class="flex items-end pb-2">
                                 <label class="flex items-center cursor-pointer">
-                                    <input type="checkbox" id="requiereRecordatorio" class="rounded border-gray-300 text-purple-600 focus:ring-purple-500" checked>
-                                    <span class="ml-2 text-sm text-gray-700">📧 Recordatorio</span>
+                                    <input type="checkbox" id="requiereRecordatorio" class="w-4 h-4 mr-2" checked>
+                                    <span class="text-sm text-gray-700">Recordatorio</span>
                                 </label>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Notas Internas</label>
-                            <textarea id="notasInternas" rows="3" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 shadow-sm" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
+                            <textarea id="notasInternas" rows="3" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
                         </div>
                     </div>
 
-                    <!-- Columna derecha - Zonas del cuerpo -->
+                    <!-- Columna derecha - Zonas del cuerpo (sin cambios) -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             📍 Zona del Cuerpo <span class="text-red-500">*</span>
                         </label>
 
-                        <!-- Botones de categorías -->
                         <div class="flex flex-wrap gap-2 mb-4">
                             <button type="button" onclick="filtrarZonasPorCategoria('todas')" class="categoria-btn px-3 py-1.5 text-sm rounded-full bg-purple-600 text-white transition-all shadow-sm">Todas</button>
                             <button type="button" onclick="filtrarZonasPorCategoria('Cabeza')" class="categoria-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-purple-100 transition-all">👤 Cabeza</button>
@@ -150,12 +157,10 @@
                             <button type="button" onclick="filtrarZonasPorCategoria('Pie')" class="categoria-btn px-3 py-1.5 text-sm rounded-full bg-gray-100 text-gray-700 hover:bg-purple-100 transition-all">🦶 Pies</button>
                         </div>
 
-                        <!-- Grid de zonas -->
                         <div id="zonasGrid" class="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border border-gray-200">
                             <div class="col-span-2 text-center text-gray-500 py-8">Cargando zonas...</div>
                         </div>
 
-                        <!-- Zona seleccionada -->
                         <div id="zonaSeleccionada" class="mt-4 p-3 bg-purple-50 rounded-lg hidden border border-purple-200">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
@@ -165,7 +170,7 @@
                                         <span id="zonaNombre" class="text-sm text-purple-600 font-medium ml-1"></span>
                                     </div>
                                 </div>
-                                <button onclick="limpiarZonaSeleccionada()" class="text-purple-400 hover:text-purple-600 transition" title="Limpiar selección">
+                                <button onclick="limpiarZonaSeleccionada()" class="text-purple-400 hover:text-purple-600 transition">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
@@ -178,9 +183,9 @@
             </form>
         </div>
 
-        <div class="p-5 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
+        <div class="p-4 md:p-5 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
             <button onclick="cerrarModalCrear()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">Cancelar</button>
-            <button onclick="guardarCita()" id="btnGuardar" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition flex items-center font-medium shadow-sm">
+            <button onclick="guardarCita()" id="btnGuardar" class="btn-primary px-4 py-2 text-white rounded-lg transition flex items-center font-medium shadow-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
@@ -189,11 +194,49 @@
         </div>
     </div>
 </div>
-
+<!-- MODAL CLIENTE RÁPIDO (dentro de citas) -->
+<div id="modalClienteRapido" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div class="p-4 border-b sticky top-0 bg-white rounded-t-xl">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">👤 Nuevo Cliente Rápido</h2>
+                <button onclick="cerrarModalClienteRapido()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="p-5">
+            <form id="formClienteRapido" onsubmit="return false;">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre completo <span class="text-red-500">*</span></label>
+                    <input type="text" id="nombreRapido" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Ej: Juan Pérez" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Teléfono <span class="text-red-500">*</span></label>
+                    <input type="tel" id="telefonoRapido" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Ej: 600111222" required>
+                    <p class="text-xs text-gray-400 mt-1">Se usará como identificador único</p>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                    <input type="email" id="emailRapido" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="cliente@ejemplo.com (opcional)">
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg text-xs text-blue-700">
+                    ℹ️ La contraseña será generada automáticamente: <strong>Cliente123!</strong>
+                </div>
+            </form>
+        </div>
+        <div class="p-4 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
+            <button onclick="cerrarModalClienteRapido()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition">Cancelar</button>
+            <button onclick="guardarClienteRapido()" id="btnGuardarRapido" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">Crear Cliente</button>
+        </div>
+    </div>
+</div>
 <!-- MODAL DETALLE CITA (SPA) -->
 <div id="modalDetalle" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
+        <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-bold text-gray-800">📋 Detalle de Cita</h2>
                 <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600 transition">
@@ -203,10 +246,10 @@
                 </button>
             </div>
         </div>
-        <div id="detalleContent" class="p-6">
+        <div id="detalleContent" class="p-4 md:p-6">
             <div class="text-center py-8">Cargando detalles...</div>
         </div>
-        <div class="p-5 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
+        <div class="p-4 md:p-5 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
             <button onclick="cerrarModalDetalle()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">Cerrar</button>
             <button id="btnCambiarEstado" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium hidden">Cambiar Estado</button>
         </div>
@@ -225,7 +268,67 @@
         let categoriaActual = 'todas';
         let selectedZonaId = null;
         let currentCitaId = null;
+                let clienteRapidoCallback = null;
 
+        window.abrirModalClienteRapido = function(callback) {
+            clienteRapidoCallback = callback;
+            document.getElementById('modalClienteRapido').classList.remove('hidden');
+            document.getElementById('modalClienteRapido').classList.add('flex');
+            document.getElementById('formClienteRapido').reset();
+        };
+
+        window.cerrarModalClienteRapido = function() {
+            document.getElementById('modalClienteRapido').classList.add('hidden');
+            document.getElementById('modalClienteRapido').classList.remove('flex');
+        };
+
+        window.guardarClienteRapido = async function() {
+            const nombre = document.getElementById('nombreRapido').value.trim();
+            const telefono = document.getElementById('telefonoRapido').value.trim();
+            const email = document.getElementById('emailRapido').value.trim();
+
+            if (!nombre) { showToast('El nombre es requerido', 'error'); return; }
+            if (!telefono) { showToast('El teléfono es requerido', 'error'); return; }
+
+            const btn = document.getElementById('btnGuardarRapido');
+            btn.disabled = true;
+            btn.innerHTML = 'Creando...';
+
+            try {
+                const response = await fetch('/api/clientes/rapido', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, telefono, email: email || null })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Cliente creado exitosamente', 'success');
+                    cerrarModalClienteRapido();
+
+                    // Recargar la lista de clientes en el select
+                    await cargarClientes();
+
+                    // Seleccionar el cliente recién creado
+                    const select = document.getElementById('clienteId');
+                    select.value = result.data.id;
+
+                    // Si hay callback, ejecutarlo
+                    if (clienteRapidoCallback) {
+                        clienteRapidoCallback(result.data);
+                        clienteRapidoCallback = null;
+                    }
+                } else {
+                    showToast(result.message || 'Error al crear cliente', 'error');
+                }
+            } catch (error) {
+                showToast('Error de conexión', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Crear Cliente';
+            }
+        };
         // ============================================
         // Inicialización
         // ============================================
@@ -269,7 +372,8 @@
                     } catch (error) { successCallback([]); }
                 },
                 eventClick: function(info) { verDetalleCita(info.event.id); },
-                height: 'auto'
+                height: 'auto',
+                responsive: true
             });
             calendar.render();
         }
@@ -284,20 +388,22 @@
         // ============================================
         async function cargarClientes() {
             try {
-                const response = await fetch('/api/clientes');
+                const response = await fetch('/api/clientes?pagina=1&pageSize=100');
                 const result = await response.json();
-                if (result.success && result.data.length > 0) {
+                if (result.success && result.data && result.data.items) {
                     const select = document.getElementById('clienteId');
-                    result.data.forEach(cliente => {
+                    select.innerHTML = '<option value="">-- Seleccionar cliente --</option>';
+                    result.data.items.forEach(cliente => {
                         const option = document.createElement('option');
                         option.value = cliente.id;
-                        option.textContent = `${cliente.nombre} - ${cliente.email}`;
+                        option.textContent = `${cliente.nombre} - ${cliente.telefono}`;
                         select.appendChild(option);
                     });
                 }
-            } catch (error) { console.error(error); }
+            } catch (error) {
+                console.error('Error cargando clientes:', error);
+            }
         }
-
         async function cargarArtistas() {
             try {
                 const response = await fetch('/api/artistas');
@@ -429,7 +535,7 @@
                 const response = await fetch(`/api/citas?artistaReferenciaId=${session.estudioId}&estado=pendiente&estado=confirmada&pageSize=10`);
                 const result = await response.json();
 
-                if (result.success) {
+                if (result.success && result.data.items) {
                     const container = document.getElementById('listaCitas');
                     if (result.data.items.length === 0) {
                         container.innerHTML = '<div class="p-8 text-center text-gray-500">No hay citas próximas</div>';
@@ -440,10 +546,10 @@
                         const fecha = new Date(cita.fechaHoraInicio);
                         return `
                             <div class="p-4 hover:bg-gray-50 cursor-pointer transition" onclick="verDetalleCita(${cita.id})">
-                                <div class="flex justify-between items-start">
+                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="font-medium text-gray-900">${cita.clienteNombre}</span>
+                                            <span class="font-medium text-gray-900">${escapeHtml(cita.clienteNombre)}</span>
                                             <span class="px-2 py-1 text-xs rounded-full ${getEstadoClase(cita.estado)}">${getEstadoTexto(cita.estado)}</span>
                                             ${cita.zonaCuerpo ? `<span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700">📍 ${cita.zonaCuerpo}</span>` : ''}
                                         </div>
@@ -464,6 +570,16 @@
             } catch (error) { console.error(error); }
         }
 
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
         function getEstadoClase(estado) {
             const clases = { 'pendiente': 'bg-yellow-100 text-yellow-800', 'confirmada': 'bg-blue-100 text-blue-800', 'en_curso': 'bg-purple-100 text-purple-800', 'completada': 'bg-green-100 text-green-800' };
             return clases[estado] || 'bg-gray-100 text-gray-800';
@@ -475,7 +591,7 @@
         }
 
         // ============================================
-        // Detalle de cita (SPA - sin redirección)
+        // Detalle de cita (SPA)
         // ============================================
         window.verDetalleCita = async function(id) {
             currentCitaId = id;
@@ -498,16 +614,16 @@
 
                     content.innerHTML = `
                         <div class="space-y-4">
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <p class="text-xs text-gray-500">Cliente</p>
-                                    <p class="font-semibold">${cita.clienteNombre}</p>
+                                    <p class="font-semibold">${escapeHtml(cita.clienteNombre)}</p>
                                     <p class="text-sm text-gray-600">${cita.clienteEmail || ''}</p>
                                     <p class="text-sm text-gray-600">${cita.clienteTelefono || ''}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <p class="text-xs text-gray-500">Artista</p>
-                                    <p class="font-semibold">${cita.artistaNombre}</p>
+                                    <p class="font-semibold">${escapeHtml(cita.artistaNombre)}</p>
                                 </div>
                                 <div class="bg-gray-50 p-3 rounded-lg">
                                     <p class="text-xs text-gray-500">Fecha y Hora</p>
@@ -533,13 +649,12 @@
                             ${cita.notasInternas ? `
                             <div class="bg-gray-50 p-3 rounded-lg">
                                 <p class="text-xs text-gray-500">Notas Internas</p>
-                                <p class="text-sm">${cita.notasInternas}</p>
+                                <p class="text-sm">${escapeHtml(cita.notasInternas)}</p>
                             </div>
                             ` : ''}
                         </div>
                     `;
 
-                    // Mostrar botón de cambio de estado solo si no está completada o cancelada
                     if (!['completada', 'cancelada'].includes(cita.estado)) {
                         const btn = document.getElementById('btnCambiarEstado');
                         btn.classList.remove('hidden');

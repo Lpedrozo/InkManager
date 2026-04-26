@@ -1,0 +1,5 @@
+# Crear migración
+dotnet ef migrations add AddClienteFields --context ApplicationDbContext --project InkManager.Infrastructure --startup-project InkManager.Web --output-dir Migrations
+
+# Actualizar base de datos
+dotnet ef database update --context ApplicationDbContext --project InkManager.Infrastructure --startup-project InkManager.Web

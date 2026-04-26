@@ -1,6 +1,7 @@
 ﻿using InkManager.Core.DTOs;
 using InkManager.Core.Entities;
 using InkManager.Infrastructure.Data;
+using InkManager.Services.Implementations;
 using InkManager.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,12 +11,14 @@ namespace InkManager.Web.Controllers
     public class CitasController : Controller
     {
         private readonly ICitaService _citaService;
+        private readonly IClienteService _clienteService;
         private readonly ApplicationDbContext _context;
 
-        public CitasController(ICitaService citaService, ApplicationDbContext context)
+        public CitasController(ICitaService citaService, ApplicationDbContext context, IClienteService clienteService)
         {
             _citaService = citaService;
             _context = context;
+            _clienteService = clienteService;
         }
 
         // GET: /citas
@@ -58,23 +61,6 @@ namespace InkManager.Web.Controllers
             var estadisticas = await _citaService.GetEstadisticasPorEstadoAsync(artistaId);
             return Ok(new { success = true, data = estadisticas });
         }
-
-        // GET: /api/clientes
-        [HttpGet("/api/clientes")]
-        public async Task<IActionResult> GetClientes()
-        {
-            var clientes = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .Where(u => u.UsuarioRoles.Any(ur => ur.Rol.Nombre == "cliente")
-                    && u.Activo && !u.EliminadoLogico)
-                .Select(u => new { u.Id, u.Nombre, u.Email, u.Telefono })
-                .OrderBy(u => u.Nombre)
-                .ToListAsync();
-
-            return Ok(new { success = true, data = clientes });
-        }
-
         // GET: /api/artistas
         [HttpGet("/api/artistas")]
         public async Task<IActionResult> GetArtistas()
@@ -160,7 +146,30 @@ namespace InkManager.Web.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        // POST: /api/clientes/rapido
+        [HttpPost("/api/clientes/rapido")]
+        public async Task<IActionResult> CreateClienteRapido([FromBody] CrearClienteRapidoDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Nombre) || string.IsNullOrWhiteSpace(dto.Telefono))
+                return BadRequest(new { success = false, message = "Nombre y teléfono son requeridos" });
 
+            try
+            {
+                var cliente = await _clienteService.CreateAsync(new CrearClienteDto
+                {
+                    Nombre = dto.Nombre,
+                    Telefono = dto.Telefono,
+                    Email = dto.Email,
+                    Password = null  // Usará la genérica
+                });
+
+                return Ok(new { success = true, message = "Cliente creado exitosamente", data = cliente });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
         // GET: /api/citas/{id}/pagos
         [HttpGet("/api/citas/{id}/pagos")]
         public async Task<IActionResult> GetPagos(int id)

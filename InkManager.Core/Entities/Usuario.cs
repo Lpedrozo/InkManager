@@ -4,10 +4,13 @@ namespace InkManager.Core.Entities
 {
     public class Usuario : BaseEntity
     {
-        [Required]
         [MaxLength(100)]
         [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; } = string.Empty;  // Ahora nullable
+
+        [Required]
+        [MaxLength(20)]
+        public string Telefono { get; set; } = string.Empty;  // Nuevo campo requerido
 
         [Required]
         [MaxLength(500)]
@@ -17,15 +20,16 @@ namespace InkManager.Core.Entities
         [MaxLength(100)]
         public string Nombre { get; set; } = string.Empty;
 
-        [MaxLength(20)]
-        public string? Telefono { get; set; }
-
         [MaxLength(500)]
         public string? FotoPerfilUrl { get; set; }
 
         public bool Activo { get; set; } = true;
 
         public DateTime? UltimoAcceso { get; set; }
+
+        // Relación con Estudio
+        public int? EstudioId { get; set; }
+        public virtual Estudio? Estudio { get; set; }
 
         // Navigation properties
         public virtual ICollection<UsuarioRol> UsuarioRoles { get; set; } = new List<UsuarioRol>();
