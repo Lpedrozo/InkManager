@@ -392,6 +392,16 @@
 
                 if (result.success) {
                     showToast(result.message, 'success');
+                            localStorage.setItem('session', JSON.stringify({
+            usuarioId: result.session.usuarioId,
+            nombre: result.session.nombre,
+            email: result.session.email,
+            rol: result.session.rolNombre,
+            artistaId: result.session.artistaId || result.session.usuarioId,
+            artistaNombre: result.session.artistaNombre || result.session.nombre,
+            estudioId: result.session.estudioId,
+            estudioNombre: result.session.estudioNombre
+        }));
                     window.location.href = result.redirectUrl || '/dashboard';
                 } else {
                     showToast(result.message, 'error');

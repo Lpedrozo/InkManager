@@ -64,22 +64,6 @@ namespace InkManager.Web.Controllers
             var estadisticas = await _citaService.GetEstadisticasPorEstadoAsync(artistaId);
             return Ok(new { success = true, data = estadisticas });
         }
-        // GET: /api/artistas
-        [HttpGet("/api/artistas")]
-        public async Task<IActionResult> GetArtistas()
-        {
-            var artistas = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .Where(u => u.UsuarioRoles.Any(ur => ur.Rol.Nombre == "artista")
-                    && u.Activo && !u.EliminadoLogico)
-                .Select(u => new { u.Id, u.Nombre, u.Email })
-                .OrderBy(u => u.Nombre)
-                .ToListAsync();
-
-            return Ok(new { success = true, data = artistas });
-        }
-
         // GET: /api/zonas-cuerpo
         [HttpGet("/api/zonas-cuerpo")]
         public async Task<IActionResult> GetZonasCuerpo()

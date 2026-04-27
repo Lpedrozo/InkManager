@@ -49,6 +49,7 @@
             </div>
         </div>
 
+
         <div class="p-4 md:p-6">
             <form id="formCita" onsubmit="return false;">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -71,14 +72,19 @@
                                 </button>
                             </div>
                         </div>
-
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                Estudio <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="estudioNombre" class="w-full rounded-lg border-gray-300 bg-gray-100" readonly disabled>
+                            <input type="hidden" id="estudioId">
+                        </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">
                                 Artista <span class="text-red-500">*</span>
                             </label>
-                            <select id="artistaId" required>
-                                <option value="">-- Seleccionar artista --</option>
-                            </select>
+                            <input type="text" id="artistaNombre" class="w-full rounded-lg border-gray-300 bg-gray-100" readonly disabled>
+                            <input type="hidden" id="artistaId">
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -346,7 +352,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             inicializarCalendario();
             cargarClientes();
-            cargarArtistas();
+            cargarArtistaActual();            
             cargarZonasCuerpo();
             cargarProximasCitas();
         });
@@ -415,22 +421,14 @@
                 console.error('Error cargando clientes:', error);
             }
         }
-        async function cargarArtistas() {
-            try {
-                const response = await fetch('/api/artistas');
-                const result = await response.json();
-                if (result.success && result.data.length > 0) {
-                    const select = document.getElementById('artistaId');
-                    result.data.forEach(artista => {
-                        const option = document.createElement('option');
-                        option.value = artista.id;
-                        option.textContent = artista.nombre;
-                        select.appendChild(option);
-                    });
-                }
-            } catch (error) { console.error(error); }
-        }
+        async function cargarArtistaActual() {
+            const session = JSON.parse(localStorage.getItem('session') || '{}');
+            const artistaNombre = session.artistaNombre || session.nombre;
+            const artistaId = session.artistaId || session.usuarioId;
 
+            document.getElementById('artistaNombre').value = artistaNombre;
+            document.getElementById('artistaId').value = artistaId;
+        }
         async function cargarZonasCuerpo() {
             try {
                 const response = await fetch('/api/zonas-cuerpo');
@@ -506,10 +504,9 @@
         document.getElementById('fechaCita')?.addEventListener('change', cargarHorarios);
 
         async function cargarHorarios() {
-            const artistaId = document.getElementById('artistaId').value;
             const fecha = document.getElementById('fechaCita').value;
+            const artistaId = document.getElementById('artistaId').value;
             if (!artistaId || !fecha) return;
-
             const horaSelect = document.getElementById('horaCita');
             horaSelect.disabled = true;
             horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
@@ -759,7 +756,7 @@
             modal.classList.remove('flex');
         };
 
-                window.guardarCita = async function() {
+        window.guardarCita = async function() {
             const clienteId = document.getElementById('clienteId').value;
             const artistaId = document.getElementById('artistaId').value;
             const fecha = document.getElementById('fechaCita').value;

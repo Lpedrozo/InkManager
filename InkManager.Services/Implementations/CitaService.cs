@@ -6,6 +6,7 @@ using InkManager.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace InkManager.Services.Implementations
 {
@@ -14,16 +15,148 @@ namespace InkManager.Services.Implementations
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IEmailService _emailService;
-        public CitaService(ApplicationDbContext context, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public CitaService(ApplicationDbContext context, IEmailService emailService, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _emailService = emailService;
             _webHostEnvironment = webHostEnvironment;
+            _httpContextAccessor = httpContextAccessor;
         }
+
+        private int GetArtistaIdActual()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null) return 0;
+
+            var rol = user.FindFirst(ClaimTypes.Role)?.Value;
+            var usuarioId = int.Parse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            if (rol == "artista")
+            {
+                return usuarioId;
+            }
+            else if (rol == "asistente")
+            {
+                var artistaId = user.FindFirst("ArtistaId")?.Value;
+                return artistaId != null ? int.Parse(artistaId) : 0;
+            }
+
+            return 0;
+        }
+
+        // Obtener el ID del estudio actual (de la sesión)
+        private int GetEstudioIdActual()
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null) return 0;
+
+            var estudioId = user.FindFirst("EstudioId")?.Value;
+            return estudioId != null ? int.Parse(estudioId) : 0;
+        }
+
+        public async Task<List<UsuarioDto>> GetClientesAsync()
+        {
+            var artistaId = GetArtistaIdActual();
+            if (artistaId == 0) return new List<UsuarioDto>();
+
+            // Obtener solo clientes asociados a este artista
+            var clientes = await _context.ClientesArtistas
+                .Include(ca => ca.Cliente)
+                .Where(ca => ca.ArtistaId == artistaId)
+                .Select(ca => new UsuarioDto
+                {
+                    Id = ca.Cliente.Id,
+                    Nombre = ca.Cliente.Nombre,
+                    Email = ca.Cliente.Email,
+                    Telefono = ca.Cliente.Telefono
+                })
+                .OrderBy(c => c.Nombre)
+                .ToListAsync();
+
+            return clientes;
+        }
+
+        public async Task<List<TimeSlotDto>> GetHorariosDisponiblesAsync(int artistaId, DateTime fecha)
+        {
+            var estudioId = GetEstudioIdActual();
+
+            // Obtener horario laboral del artista en este estudio
+            var estudioUsuario = await _context.EstudioUsuarios
+                .FirstOrDefaultAsync(eu => eu.UsuarioId == artistaId && eu.EstudioId == estudioId);
+
+            // Parsear horario laboral (formato JSON: {"lunes":"9-18","martes":"9-18",...})
+            var diaSemana = fecha.DayOfWeek.ToString().ToLower();
+            var horarioLaboral = estudioUsuario?.HorarioLaboral;
+            var rangoHorario = "9-20"; // Default
+
+            if (!string.IsNullOrEmpty(horarioLaboral))
+            {
+                try
+                {
+                    var horariosJson = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(horarioLaboral);
+                    if (horariosJson != null && horariosJson.ContainsKey(diaSemana))
+                    {
+                        rangoHorario = horariosJson[diaSemana];
+                    }
+                }
+                catch { }
+            }
+
+            var partes = rangoHorario.Split('-');
+            var horaInicio = TimeSpan.Parse(partes[0]);
+            var horaFin = TimeSpan.Parse(partes[1]);
+            var duracion = TimeSpan.FromHours(1);
+
+            var citasDelDia = await _context.Citas
+                .Where(c => c.ArtistaReferenciaId == artistaId
+                    && c.FechaHoraInicio.Date == fecha.Date
+                    && c.Estado != "cancelada"
+                    && !c.EliminadoLogico)
+                .Select(c => new { c.FechaHoraInicio, c.FechaHoraFin })
+                .ToListAsync();
+
+            var horariosDisponibles = new List<TimeSlotDto>();
+
+            for (var hora = horaInicio; hora < horaFin; hora = hora.Add(duracion))
+            {
+                var slotInicio = fecha.Date.Add(hora);
+                var slotFin = slotInicio.Add(duracion);
+
+                var ocupado = citasDelDia.Any(c =>
+                    (slotInicio >= c.FechaHoraInicio && slotInicio < c.FechaHoraFin) ||
+                    (slotFin > c.FechaHoraInicio && slotFin <= c.FechaHoraFin) ||
+                    (slotInicio <= c.FechaHoraInicio && slotFin >= c.FechaHoraFin));
+
+                if (!ocupado)
+                {
+                    horariosDisponibles.Add(new TimeSlotDto
+                    {
+                        HoraInicio = hora,
+                        HoraFin = hora.Add(duracion),
+                        Disponible = true
+                    });
+                }
+            }
+
+            return horariosDisponibles;
+        }
+
         public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
         {
+            var artistaId = GetArtistaIdActual();
+            var estudioId = GetEstudioIdActual();
+
+            // Validar que el artista pertenece al estudio seleccionado
+            var pertenece = await _context.EstudioUsuarios
+                .AnyAsync(eu => eu.UsuarioId == artistaId && eu.EstudioId == estudioId);
+
+            if (!pertenece)
+                throw new InvalidOperationException("El artista no pertenece a este estudio");
+
             // Validar disponibilidad del artista
-            var disponible = await ValidarDisponibilidadAsync(dto.ArtistaReferenciaId, dto.FechaHoraInicio, dto.FechaHoraFin);
+            var disponible = await ValidarDisponibilidadAsync(artistaId, dto.FechaHoraInicio, dto.FechaHoraFin);
             if (!disponible)
                 throw new InvalidOperationException("El artista no está disponible en ese horario");
 
@@ -37,7 +170,7 @@ namespace InkManager.Services.Implementations
             var cita = new Cita
             {
                 UsuarioId = dto.UsuarioId,
-                ArtistaReferenciaId = dto.ArtistaReferenciaId,
+                ArtistaReferenciaId = artistaId, // Usar el artista de la sesión, no el del DTO
                 FechaHoraInicio = dto.FechaHoraInicio,
                 FechaHoraFin = dto.FechaHoraFin,
                 PrecioTotal = dto.PrecioTotal,
@@ -50,6 +183,9 @@ namespace InkManager.Services.Implementations
                 RequiereRecordatorio = dto.RequiereRecordatorio,
                 Estado = "pendiente"
             };
+
+            // Agregar el estudio de referencia (opcional, para saber dónde se atiende)
+            // cita.EstudioId = estudioId; // Si agregas esta columna
 
             _context.Citas.Add(cita);
             await _context.SaveChangesAsync();
@@ -132,66 +268,6 @@ namespace InkManager.Services.Implementations
             return MapToDto(cita);
         }
         // Método para obtener clientes disponibles
-        public async Task<List<UsuarioDto>> GetClientesAsync()
-        {
-            var clientes = await _context.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .Where(u => u.UsuarioRoles.Any(ur => ur.Rol.Nombre == "cliente")
-                    && u.Activo && !u.EliminadoLogico)
-                .Select(u => new UsuarioDto
-                {
-                    Id = u.Id,
-                    Nombre = u.Nombre,
-                    Email = u.Email,
-                    Telefono = u.Telefono
-                })
-                .OrderBy(u => u.Nombre)
-                .ToListAsync();
-
-            return clientes;
-        }
-
-        // Método para obtener horarios disponibles
-        public async Task<List<TimeSlotDto>> GetHorariosDisponiblesAsync(int artistaId, DateTime fecha)
-        {
-            var citasDelDia = await _context.Citas
-                .Where(c => c.ArtistaReferenciaId == artistaId
-                    && c.FechaHoraInicio.Date == fecha.Date
-                    && c.Estado != "cancelada"
-                    && !c.EliminadoLogico)
-                .Select(c => new { c.FechaHoraInicio, c.FechaHoraFin })
-                .ToListAsync();
-
-            var horariosDisponibles = new List<TimeSlotDto>();
-            var horaInicio = new TimeSpan(9, 0, 0); // 9 AM
-            var horaFin = new TimeSpan(20, 0, 0); // 8 PM
-            var duracion = TimeSpan.FromHours(1); // 1 hora por slot
-
-            for (var hora = horaInicio; hora < horaFin; hora = hora.Add(duracion))
-            {
-                var slotInicio = fecha.Date.Add(hora);
-                var slotFin = slotInicio.Add(duracion);
-
-                var ocupado = citasDelDia.Any(c =>
-                    (slotInicio >= c.FechaHoraInicio && slotInicio < c.FechaHoraFin) ||
-                    (slotFin > c.FechaHoraInicio && slotFin <= c.FechaHoraFin) ||
-                    (slotInicio <= c.FechaHoraInicio && slotFin >= c.FechaHoraFin));
-
-                if (!ocupado)
-                {
-                    horariosDisponibles.Add(new TimeSlotDto
-                    {
-                        HoraInicio = hora,
-                        HoraFin = hora.Add(duracion),
-                        Disponible = true
-                    });
-                }
-            }
-
-            return horariosDisponibles;
-        }
-
         public async Task<CitaDto?> UpdateAsync(int id, ActualizarCitaDto dto)
         {
             var cita = await _context.Citas.FindAsync(id);
