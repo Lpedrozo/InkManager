@@ -1,5 +1,9 @@
+using System.Security.Claims;
 using InkManager.Core.DTOs;
 using InkManager.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InkManager.Web.Controllers
@@ -13,21 +17,30 @@ namespace InkManager.Web.Controllers
             _authService = authService;
         }
 
-        // GET: /login - Muestra la vista de login
+        [AllowAnonymous]
         [HttpGet("/login")]
         public IActionResult Login()
         {
+            // Si ya está autenticado, redirigir al dashboard
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
             return View();
         }
 
-        // GET: / - Redirige a login
+        [AllowAnonymous]
         [HttpGet("/")]
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
             return RedirectToAction("Login");
         }
 
-        // POST: /api/auth/login
+        [AllowAnonymous]
         [HttpPost("/api/auth/login")]
         public async Task<IActionResult> ApiLogin([FromBody] LoginDto dto)
         {
@@ -43,30 +56,72 @@ namespace InkManager.Web.Controllers
                 return BadRequest(new { success = false, message = result.Message });
             }
 
+            // Si ya tiene claims (login directo), crear cookie
+            if (result.Claims != null && result.Claims.Any())
+            {
+                var identity = new ClaimsIdentity(result.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = dto.RememberMe,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(dto.RememberMe ? 7 : 1)
+                };
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+                return Ok(new { success = true, data = result, redirectUrl = "/dashboard" });
+            }
+
+            // Si necesita selección, devolver opciones
             return Ok(new { success = true, data = result });
         }
 
-        // POST: /api/auth/select-role-estudio
+        [AllowAnonymous]
         [HttpPost("/api/auth/select-role-estudio")]
         public async Task<IActionResult> ApiSelectRolAndEstudio([FromBody] SelectRolEstudioDto dto)
         {
             try
             {
-                var session = await _authService.SelectRolAndEstudioAsync(dto);
-                var token = _authService.GenerateJwtToken(session);
+                var result = await _authService.SelectRolAndEstudioAsync(dto);
 
-                return Ok(new
+                if (!result.Success || result.Claims == null)
                 {
-                    success = true,
-                    token = token,
-                    session = session,
-                    message = "Sesión iniciada correctamente"
-                });
+                    return BadRequest(new { success = false, message = result.Message ?? "Error al seleccionar" });
+                }
+
+                var identity = new ClaimsIdentity(result.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = dto.RememberMe,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddDays(dto.RememberMe ? 7 : 1)
+                };
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+                return Ok(new { success = true, message = result.Message, redirectUrl = "/dashboard" });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
+        }
+
+        [HttpPost("/api/auth/logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok(new { success = true, message = "Sesión cerrada correctamente" });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/logout")]
+        public async Task<IActionResult> LogoutPage()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
         }
     }
 }

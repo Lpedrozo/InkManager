@@ -30,7 +30,8 @@ namespace InkManager.Core.DTOs
         public string Telefono { get; set; } = string.Empty;
 
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
-        public string? Password { get; set; }  // Opcional - si se quiere crear usuario
+        public string? Password { get; set; }  
+        public string? Notas { get; set; } 
     }
 
     public class ActualizarClienteDto

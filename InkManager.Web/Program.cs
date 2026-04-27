@@ -2,9 +2,7 @@ using InkManager.Infrastructure.Data;
 using InkManager.Services.Implementations;
 using InkManager.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,26 +18,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 );
 
 // Registrar servicios
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICitaService, CitaService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
-// Configurar JWT Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Configurar Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "InkManagerSecretKey2024VeryLongAndSecure!!!"))
-        };
+        options.LoginPath = "/login";
+        options.AccessDeniedPath = "/login";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.Name = "InkManagerAuth";
     });
 
 builder.Services.AddAuthorization();
@@ -56,21 +53,14 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Solo necesitas esto - las rutas ya están definidas en los atributos de los controladores
+// Mapear rutas
 app.MapControllers();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapControllerRoute(
-    name: "auth",
-    pattern: "login",
-    defaults: new { controller = "Auth", action = "Login" });
 
-app.MapControllerRoute(
-    name: "dashboard",
-    pattern: "dashboard",
-    defaults: new { controller = "Dashboard", action = "Index" });
 app.Run();

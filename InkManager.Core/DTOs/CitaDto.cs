@@ -1,7 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace InkManager.Core.DTOs
 {
+    public class CrearCitaConImagenDto
+    {
+        public int UsuarioId { get; set; }
+        public int ArtistaReferenciaId { get; set; }
+        public DateTime FechaHoraInicio { get; set; }
+        public DateTime FechaHoraFin { get; set; }
+        public decimal PrecioTotal { get; set; }
+        public decimal Adelanto { get; set; }
+        public int? ZonaCuerpoId { get; set; }
+        public decimal? TamanioCm { get; set; }
+        public string? NotasInternas { get; set; }
+        public string? NotasPublicas { get; set; }
+        public bool RequiereRecordatorio { get; set; }
+        public IFormFile? FotoReferencia { get; set; }
+    }
     public class CitaDto
     {
         public int Id { get; set; }
@@ -38,7 +54,7 @@ namespace InkManager.Core.DTOs
 
         [Required]
         public int ArtistaReferenciaId { get; set; }
-
+        public IFormFile? FotoReferencia { get; set; }
         public int? AsistenteId { get; set; }
 
         [Required]

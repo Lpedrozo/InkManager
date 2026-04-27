@@ -1,5 +1,6 @@
 ﻿using InkManager.Core.DTOs;
 using InkManager.Core.DTOs.Common;
+using Microsoft.AspNetCore.Http;
 
 namespace InkManager.Services.Interfaces
 {
@@ -10,7 +11,7 @@ namespace InkManager.Services.Interfaces
         Task<CitaDto> CreateAsync(CrearCitaDto dto);
         Task<CitaDto?> UpdateAsync(int id, ActualizarCitaDto dto);
         Task<bool> DeleteAsync(int id);
-
+        Task<string> GuardarImagenAsync(IFormFile imagen);
         // Gestión de estados
         Task<bool> CambiarEstadoAsync(int id, CambiarEstadoDto dto, string usuarioTipo, int usuarioId);
         Task<bool> CancelarCitaAsync(int id, string motivo, string usuarioTipo, int usuarioId);

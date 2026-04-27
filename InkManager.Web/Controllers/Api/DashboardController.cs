@@ -1,8 +1,10 @@
 ﻿using InkManager.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InkManager.Web.Controllers
 {
+    [Authorize]
     public class DashboardController : Controller
     {
         private readonly IDashboardService _dashboardService;
@@ -18,7 +20,11 @@ namespace InkManager.Web.Controllers
         {
             return View("~/Views/Dashboard/Index.cshtml");
         }
-
+        [HttpGet("/dashboard/check-session")]
+        public IActionResult CheckSession()
+        {
+            return Ok(new { success = true, message = "Sesión válida" });
+        }
         // GET: /api/dashboard/resumen
         [HttpGet("/api/dashboard/resumen")]
         public async Task<IActionResult> GetResumen(int? artistaId = null, int? estudioId = null)

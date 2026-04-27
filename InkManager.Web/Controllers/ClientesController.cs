@@ -1,9 +1,12 @@
 using InkManager.Core.DTOs;
 using InkManager.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InkManager.Web.Controllers
 {
+    [Authorize]
+
     public class ClientesController : Controller
     {
         private readonly IClienteService _clienteService;

@@ -139,6 +139,17 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Notas Internas</label>
                             <textarea id="notasInternas" rows="3" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
                         </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Imagen de Referencia</label>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input type="file" id="fotoReferencia" accept="image/*" class="flex-1 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                                <div id="previewImagen" class="hidden mt-2">
+                                    <img id="previewImg" class="w-32 h-32 object-cover rounded-lg border shadow-sm">
+                                    <button type="button" onclick="limpiarImagen()" class="text-red-500 text-sm mt-1 hover:text-red-700">✕ Eliminar</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Sube una imagen de referencia del diseño (opcional)</p>
+                        </div>
                     </div>
 
                     <!-- Columna derecha - Zonas del cuerpo (sin cambios) -->
@@ -593,7 +604,7 @@
         // ============================================
         // Detalle de cita (SPA)
         // ============================================
-        window.verDetalleCita = async function(id) {
+                window.verDetalleCita = async function(id) {
             currentCitaId = id;
             const modal = document.getElementById('modalDetalle');
             const content = document.getElementById('detalleContent');
@@ -611,6 +622,20 @@
                     const cita = result.data;
                     const fechaInicio = new Date(cita.fechaHoraInicio);
                     const fechaFin = new Date(cita.fechaHoraFin);
+
+                    // Construir HTML de la imagen si existe
+                    let imagenHtml = '';
+                    if (cita.fotoReferenciaUrl) {
+                        imagenHtml = `
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-xs text-gray-500 mb-2">📷 Imagen de Referencia</p>
+                                <img src="${cita.fotoReferenciaUrl}"
+                                     class="w-full max-w-xs rounded-lg shadow-md cursor-pointer hover:opacity-90 transition"
+                                     onclick="window.open('${cita.fotoReferenciaUrl}', '_blank')"
+                                     alt="Referencia del diseño">
+                            </div>
+                        `;
+                    }
 
                     content.innerHTML = `
                         <div class="space-y-4">
@@ -646,6 +671,7 @@
                                     <p class="text-sm font-medium">Saldo: $${cita.saldoPendiente}</p>
                                 </div>
                             </div>
+                            ${imagenHtml}
                             ${cita.notasInternas ? `
                             <div class="bg-gray-50 p-3 rounded-lg">
                                 <p class="text-xs text-gray-500">Notas Internas</p>
@@ -733,12 +759,13 @@
             modal.classList.remove('flex');
         };
 
-        window.guardarCita = async function() {
+                window.guardarCita = async function() {
             const clienteId = document.getElementById('clienteId').value;
             const artistaId = document.getElementById('artistaId').value;
             const fecha = document.getElementById('fechaCita').value;
             const horaInicio = document.getElementById('horaCita').value;
             const duracion = parseInt(document.getElementById('duracion').value);
+            const fotoReferencia = document.getElementById('fotoReferencia').files[0];
 
             if (!clienteId) { showToast('Selecciona un cliente', 'error'); return; }
             if (!artistaId) { showToast('Selecciona un artista', 'error'); return; }
@@ -763,18 +790,21 @@
                 return;
             }
 
-            const data = {
-                usuarioId: parseInt(clienteId),
-                artistaReferenciaId: parseInt(artistaId),
-                fechaHoraInicio: fechaHoraInicio.toISOString(),
-                fechaHoraFin: fechaHoraFin.toISOString(),
-                precioTotal: parseFloat(document.getElementById('precioTotal').value) || 0,
-                adelanto: parseFloat(document.getElementById('adelanto').value) || 0,
-                zonaCuerpoId: selectedZonaId,
-                tamanioCm: parseFloat(document.getElementById('tamanioCm').value) || null,
-                notasInternas: document.getElementById('notasInternas').value,
-                requiereRecordatorio: document.getElementById('requiereRecordatorio').checked
-            };
+            const formData = new FormData();
+            formData.append('UsuarioId', clienteId);
+            formData.append('ArtistaReferenciaId', artistaId);
+            formData.append('FechaHoraInicio', fechaHoraInicio.toISOString());
+            formData.append('FechaHoraFin', fechaHoraFin.toISOString());
+            formData.append('PrecioTotal', document.getElementById('precioTotal').value || '0');
+            formData.append('Adelanto', document.getElementById('adelanto').value || '0');
+            formData.append('ZonaCuerpoId', selectedZonaId);
+            formData.append('TamanioCm', document.getElementById('tamanioCm').value || '0');
+            formData.append('NotasInternas', document.getElementById('notasInternas').value);
+            formData.append('RequiereRecordatorio', document.getElementById('requiereRecordatorio').checked);
+
+            if (fotoReferencia) {
+                formData.append('FotoReferencia', fotoReferencia);
+            }
 
             const btn = document.getElementById('btnGuardar');
             btn.disabled = true;
@@ -783,9 +813,9 @@
             try {
                 const response = await fetch('/api/citas', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: formData
                 });
+
                 const result = await response.json();
 
                 if (result.success) {
@@ -803,5 +833,26 @@
                 btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Guardar Cita';
             }
         };
+
+        // Vista previa de imagen
+        document.getElementById('fotoReferencia')?.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const preview = document.getElementById('previewImagen');
+                    const img = document.getElementById('previewImg');
+                    img.src = event.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function limpiarImagen() {
+            document.getElementById('fotoReferencia').value = '';
+            document.getElementById('previewImagen').classList.add('hidden');
+            document.getElementById('previewImg').src = '';
+        }
     </script>
 }

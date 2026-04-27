@@ -22,6 +22,112 @@ namespace InkManager.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("InkManager.Core.Entities.Asistente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ArtistaAsistidoId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EliminadoLogico")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("EstudioId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaAsignacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Permisos")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistaAsistidoId");
+
+                    b.HasIndex("EstudioId");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("Asistentes");
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.Calendario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<bool>("EliminadoLogico")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("EntidadId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GoogleCalendarId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("Tipo", "EntidadId")
+                        .IsUnique();
+
+                    b.ToTable("Calendarios");
+                });
+
             modelBuilder.Entity("InkManager.Core.Entities.Cita", b =>
                 {
                     b.Property<int>("Id")
@@ -100,6 +206,32 @@ namespace InkManager.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_Cita_Estado", "Estado IN ('pendiente', 'confirmada', 'en_curso', 'completada', 'cancelada', 'no_asistio')");
                         });
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.ClienteArtista", b =>
+                {
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ArtistaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EstudioId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaAsociacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notas")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ClienteId", "ArtistaId");
+
+                    b.HasIndex("ArtistaId");
+
+                    b.HasIndex("EstudioId");
+
+                    b.ToTable("ClientesArtistas");
                 });
 
             modelBuilder.Entity("InkManager.Core.Entities.ConfiguracionCorreo", b =>
@@ -279,8 +411,14 @@ namespace InkManager.Infrastructure.Migrations
                     b.Property<int>("UsuarioId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("FechaAsignacion")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("HorarioLaboral")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RolEnEstudio")
                         .HasColumnType("nvarchar(max)");
@@ -290,6 +428,65 @@ namespace InkManager.Infrastructure.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("EstudioUsuarios");
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.EventoCalendario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CalendarioId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CitaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("Descripcion")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EliminadoLogico")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaHoraFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaHoraInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GoogleEventId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("TipoEvento")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CalendarioId");
+
+                    b.HasIndex("CitaId");
+
+                    b.ToTable("EventosCalendario");
                 });
 
             modelBuilder.Entity("InkManager.Core.Entities.HistorialEstadoCita", b =>
@@ -584,6 +781,40 @@ namespace InkManager.Infrastructure.Migrations
                     b.ToTable("ZonasCuerpo");
                 });
 
+            modelBuilder.Entity("InkManager.Core.Entities.Asistente", b =>
+                {
+                    b.HasOne("InkManager.Core.Entities.Usuario", "ArtistaAsistido")
+                        .WithMany("AsistentesQueAyudan")
+                        .HasForeignKey("ArtistaAsistidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InkManager.Core.Entities.Estudio", "Estudio")
+                        .WithMany()
+                        .HasForeignKey("EstudioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InkManager.Core.Entities.Usuario", "Usuario")
+                        .WithOne("AsistenteAsignado")
+                        .HasForeignKey("InkManager.Core.Entities.Asistente", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ArtistaAsistido");
+
+                    b.Navigation("Estudio");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.Calendario", b =>
+                {
+                    b.HasOne("InkManager.Core.Entities.Usuario", null)
+                        .WithMany("CalendariosPersonales")
+                        .HasForeignKey("UsuarioId");
+                });
+
             modelBuilder.Entity("InkManager.Core.Entities.Cita", b =>
                 {
                     b.HasOne("InkManager.Core.Entities.Usuario", "ArtistaReferencia")
@@ -608,6 +839,33 @@ namespace InkManager.Infrastructure.Migrations
                     b.Navigation("Usuario");
 
                     b.Navigation("ZonaCuerpo");
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.ClienteArtista", b =>
+                {
+                    b.HasOne("InkManager.Core.Entities.Usuario", "Artista")
+                        .WithMany("ClientesAtendidos")
+                        .HasForeignKey("ArtistaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InkManager.Core.Entities.Usuario", "Cliente")
+                        .WithMany("ArtistasQueAtienden")
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InkManager.Core.Entities.Estudio", "Estudio")
+                        .WithMany()
+                        .HasForeignKey("EstudioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Artista");
+
+                    b.Navigation("Cliente");
+
+                    b.Navigation("Estudio");
                 });
 
             modelBuilder.Entity("InkManager.Core.Entities.ConfiguracionCorreo", b =>
@@ -656,6 +914,24 @@ namespace InkManager.Infrastructure.Migrations
                     b.Navigation("Estudio");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("InkManager.Core.Entities.EventoCalendario", b =>
+                {
+                    b.HasOne("InkManager.Core.Entities.Calendario", "Calendario")
+                        .WithMany("Eventos")
+                        .HasForeignKey("CalendarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InkManager.Core.Entities.Cita", "Cita")
+                        .WithMany()
+                        .HasForeignKey("CitaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Calendario");
+
+                    b.Navigation("Cita");
                 });
 
             modelBuilder.Entity("InkManager.Core.Entities.HistorialEstadoCita", b =>
@@ -727,6 +1003,11 @@ namespace InkManager.Infrastructure.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("InkManager.Core.Entities.Calendario", b =>
+                {
+                    b.Navigation("Eventos");
+                });
+
             modelBuilder.Entity("InkManager.Core.Entities.Cita", b =>
                 {
                     b.Navigation("HistorialEstados");
@@ -750,9 +1031,19 @@ namespace InkManager.Infrastructure.Migrations
 
             modelBuilder.Entity("InkManager.Core.Entities.Usuario", b =>
                 {
+                    b.Navigation("ArtistasQueAtienden");
+
+                    b.Navigation("AsistenteAsignado");
+
+                    b.Navigation("AsistentesQueAyudan");
+
+                    b.Navigation("CalendariosPersonales");
+
                     b.Navigation("CitasComoArtista");
 
                     b.Navigation("CitasComoCliente");
+
+                    b.Navigation("ClientesAtendidos");
 
                     b.Navigation("CubiculosAsignados");
 

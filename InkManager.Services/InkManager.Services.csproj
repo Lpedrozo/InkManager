@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.16.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\InkManager.Core\InkManager.Core.csproj" />
     <ProjectReference Include="..\InkManager.Infrastructure\InkManager.Infrastructure.csproj" />
   </ItemGroup>

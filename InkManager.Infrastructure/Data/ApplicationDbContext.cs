@@ -10,7 +10,7 @@ namespace InkManager.Infrastructure.Data
         {
         }
 
-        // DbSets
+        // DbSets existentes
         public DbSet<Estudio> Estudios { get; set; }
         public DbSet<ZonaCuerpo> ZonasCuerpo { get; set; }
         public DbSet<Cita> Citas { get; set; }
@@ -19,14 +19,16 @@ namespace InkManager.Infrastructure.Data
         public DbSet<Cubiculo> Cubiculos { get; set; }
         public DbSet<ConfiguracionCorreo> ConfiguracionesCorreo { get; set; }
         public DbSet<MetricaDiaria> MetricasDiarias { get; set; }
-
-        // Tablas de autenticación
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
         public DbSet<UsuarioRol> UsuarioRoles { get; set; }
-
-        // Tabla puente para Estudio-Usuario (muchos a muchos)
         public DbSet<EstudioUsuario> EstudioUsuarios { get; set; }
+
+        // Nuevos DbSets
+        public DbSet<Asistente> Asistentes { get; set; }
+        public DbSet<ClienteArtista> ClientesArtistas { get; set; }
+        public DbSet<Calendario> Calendarios { get; set; }
+        public DbSet<EventoCalendario> EventosCalendario { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +45,8 @@ namespace InkManager.Infrastructure.Data
             modelBuilder.Entity<Rol>().HasQueryFilter(r => !r.EliminadoLogico);
             modelBuilder.Entity<ConfiguracionCorreo>().HasQueryFilter(c => !c.EliminadoLogico);
             modelBuilder.Entity<MetricaDiaria>().HasQueryFilter(m => !m.EliminadoLogico);
+            modelBuilder.Entity<Calendario>().HasQueryFilter(c => !c.EliminadoLogico);
+            modelBuilder.Entity<EventoCalendario>().HasQueryFilter(e => !e.EliminadoLogico);
 
             // ============================================
             // Configuración de Usuario
@@ -55,8 +59,9 @@ namespace InkManager.Infrastructure.Data
                 .HasIndex(u => u.Telefono)
                 .IsUnique()
                 .HasFilter("[Telefono] IS NOT NULL");
+
             // ============================================
-            // Configuración de UsuarioRol (muchos a muchos)
+            // Configuración de UsuarioRol
             // ============================================
             modelBuilder.Entity<UsuarioRol>()
                 .HasKey(ur => new { ur.UsuarioId, ur.RolId });
@@ -74,7 +79,7 @@ namespace InkManager.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ============================================
-            // Configuración de EstudioUsuario (muchos a muchos)
+            // Configuración de EstudioUsuario
             // ============================================
             modelBuilder.Entity<EstudioUsuario>()
                 .HasKey(eu => new { eu.EstudioId, eu.UsuarioId });
@@ -92,16 +97,86 @@ namespace InkManager.Infrastructure.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ============================================
+            // Configuración de Asistente
+            // ============================================
+            modelBuilder.Entity<Asistente>()
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<Asistente>()
+                .HasOne(a => a.Usuario)
+                .WithOne(u => u.AsistenteAsignado)
+                .HasForeignKey<Asistente>(a => a.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Asistente>()
+                .HasOne(a => a.ArtistaAsistido)
+                .WithMany(u => u.AsistentesQueAyudan)
+                .HasForeignKey(a => a.ArtistaAsistidoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Asistente>()
+                .HasOne(a => a.Estudio)
+                .WithMany()
+                .HasForeignKey(a => a.EstudioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ============================================
+            // Configuración de ClienteArtista
+            // ============================================
+            modelBuilder.Entity<ClienteArtista>()
+                .HasKey(ca => new { ca.ClienteId, ca.ArtistaId });
+
+            modelBuilder.Entity<ClienteArtista>()
+                .HasOne(ca => ca.Cliente)
+                .WithMany(u => u.ArtistasQueAtienden)
+                .HasForeignKey(ca => ca.ClienteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClienteArtista>()
+                .HasOne(ca => ca.Artista)
+                .WithMany(u => u.ClientesAtendidos)
+                .HasForeignKey(ca => ca.ArtistaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClienteArtista>()
+                .HasOne(ca => ca.Estudio)
+                .WithMany()
+                .HasForeignKey(ca => ca.EstudioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ============================================
+            // Configuración de Calendario
+            // ============================================
+            modelBuilder.Entity<Calendario>()
+                .HasIndex(c => new { c.Tipo, c.EntidadId })
+                .IsUnique();
+
+            // ============================================
+            // Configuración de EventoCalendario
+            // ============================================
+            modelBuilder.Entity<EventoCalendario>()
+                .HasOne(e => e.Calendario)
+                .WithMany(c => c.Eventos)
+                .HasForeignKey(e => e.CalendarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<EventoCalendario>()
+                .HasOne(e => e.Cita)
+                .WithMany()
+                .HasForeignKey(e => e.CitaId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ============================================
             // Configuración de Cita con Usuario
             // ============================================
             modelBuilder.Entity<Cita>()
-                .HasOne(c => c.Usuario) // Cliente
+                .HasOne(c => c.Usuario)
                 .WithMany(u => u.CitasComoCliente)
                 .HasForeignKey(c => c.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Cita>()
-                .HasOne(c => c.ArtistaReferencia) // Artista
+                .HasOne(c => c.ArtistaReferencia)
                 .WithMany(u => u.CitasComoArtista)
                 .HasForeignKey(c => c.ArtistaReferenciaId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -187,10 +262,6 @@ namespace InkManager.Infrastructure.Data
 
             modelBuilder.Entity<Estudio>()
                 .HasIndex(e => e.Email)
-                .IsUnique();
-
-            modelBuilder.Entity<Usuario>()
-                .HasIndex(u => u.Email)
                 .IsUnique();
 
             // ============================================

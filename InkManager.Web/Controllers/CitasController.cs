@@ -3,11 +3,14 @@ using InkManager.Core.Entities;
 using InkManager.Infrastructure.Data;
 using InkManager.Services.Implementations;
 using InkManager.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace InkManager.Web.Controllers
 {
+    [Authorize]
+
     public class CitasController : Controller
     {
         private readonly ICitaService _citaService;
@@ -97,10 +100,9 @@ namespace InkManager.Web.Controllers
             var horarios = await _citaService.GetHorariosDisponiblesAsync(artistaId, fecha);
             return Ok(new { success = true, data = horarios });
         }
-
         // POST: /api/citas
         [HttpPost("/api/citas")]
-        public async Task<IActionResult> CreateCita([FromBody] CrearCitaDto dto)
+        public async Task<IActionResult> CreateCita([FromForm] CrearCitaDto dto)
         {
             if (!ModelState.IsValid)
             {
@@ -120,9 +122,7 @@ namespace InkManager.Web.Controllers
             {
                 return StatusCode(500, new { success = false, message = "Error interno al crear la cita" });
             }
-        }
-
-        // PATCH: /api/citas/{id}/estado
+        }        // PATCH: /api/citas/{id}/estado
         [HttpPatch("/api/citas/{id}/estado")]
         public async Task<IActionResult> CambiarEstado(int id, [FromBody] CambiarEstadoDto dto)
         {

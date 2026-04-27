@@ -44,5 +44,21 @@ namespace InkManager.Core.Entities
 
         // Relación con MetricasDiarias
         public virtual ICollection<MetricaDiaria> MetricasDiarias { get; set; } = new List<MetricaDiaria>();
+        // Agrega estas propiedades dentro de la clase Usuario:
+
+        // Relación con asistentes (como artista asistido)
+        public virtual ICollection<Asistente> AsistentesQueAyudan { get; set; } = new List<Asistente>();
+
+        // Relación con asistentes (como asistente)
+        public virtual Asistente? AsistenteAsignado { get; set; }
+
+        // Relación con clientes que ha atendido
+        public virtual ICollection<ClienteArtista> ClientesAtendidos { get; set; } = new List<ClienteArtista>();
+
+        // Relación con artistas que lo atienden (como cliente)
+        public virtual ICollection<ClienteArtista> ArtistasQueAtienden { get; set; } = new List<ClienteArtista>();
+
+        // Relación con calendarios personales
+        public virtual ICollection<Calendario> CalendariosPersonales { get; set; } = new List<Calendario>();
     }
 }

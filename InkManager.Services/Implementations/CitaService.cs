@@ -3,6 +3,8 @@ using InkManager.Core.DTOs.Common;
 using InkManager.Core.Entities;
 using InkManager.Infrastructure.Data;
 using InkManager.Services.Interfaces;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace InkManager.Services.Implementations
@@ -10,12 +12,112 @@ namespace InkManager.Services.Implementations
     public class CitaService : ICitaService
     {
         private readonly ApplicationDbContext _context;
-
-        public CitaService(ApplicationDbContext context)
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly IEmailService _emailService;
+        public CitaService(ApplicationDbContext context, IEmailService emailService, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _emailService = emailService;
+            _webHostEnvironment = webHostEnvironment;
         }
+        public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
+        {
+            // Validar disponibilidad del artista
+            var disponible = await ValidarDisponibilidadAsync(dto.ArtistaReferenciaId, dto.FechaHoraInicio, dto.FechaHoraFin);
+            if (!disponible)
+                throw new InvalidOperationException("El artista no está disponible en ese horario");
 
+            // Guardar imagen si existe
+            string fotoUrl = null;
+            if (dto.FotoReferencia != null)
+            {
+                fotoUrl = await GuardarImagenAsync(dto.FotoReferencia);
+            }
+
+            var cita = new Cita
+            {
+                UsuarioId = dto.UsuarioId,
+                ArtistaReferenciaId = dto.ArtistaReferenciaId,
+                FechaHoraInicio = dto.FechaHoraInicio,
+                FechaHoraFin = dto.FechaHoraFin,
+                PrecioTotal = dto.PrecioTotal,
+                Adelanto = dto.Adelanto,
+                ZonaCuerpoId = dto.ZonaCuerpoId,
+                TamanioCm = dto.TamanioCm,
+                NotasInternas = dto.NotasInternas,
+                NotasPublicas = dto.NotasPublicas,
+                FotoReferenciaUrl = fotoUrl ?? dto.FotoReferenciaUrl,
+                RequiereRecordatorio = dto.RequiereRecordatorio,
+                Estado = "pendiente"
+            };
+
+            _context.Citas.Add(cita);
+            await _context.SaveChangesAsync();
+
+            await RegistrarHistorialAsync(cita.Id, null, "pendiente", "sistema", 0, "Cita creada");
+
+            if (dto.Adelanto > 0)
+            {
+                await RegistrarPagoAsync(cita.Id, new RegistrarPagoDto
+                {
+                    Monto = dto.Adelanto,
+                    MetodoPago = "efectivo",
+                    Nota = "Adelanto inicial"
+                });
+            }
+
+            await EnviarNotificacionArtistaAsync(cita.Id);
+
+            return (await GetByIdAsync(cita.Id))!;
+        }
+        private async Task EnviarNotificacionArtistaAsync(int citaId)
+        {
+            try
+            {
+                var cita = await _context.Citas
+                    .Include(c => c.Usuario)
+                    .Include(c => c.ArtistaReferencia)
+                    .Include(c => c.ZonaCuerpo)
+                    .FirstOrDefaultAsync(c => c.Id == citaId);
+
+                if (cita == null) return;
+
+                var emailArtista = cita.ArtistaReferencia?.Email;
+                if (string.IsNullOrEmpty(emailArtista)) return;
+
+                await _emailService.EnviarNotificacionCitaAsync(
+                    emailArtista,
+                    cita.ArtistaReferencia.Nombre,
+                    cita.Usuario.Nombre,
+                    cita.FechaHoraInicio,
+                    cita.ZonaCuerpo?.Nombre ?? "No especificada",
+                    cita.PrecioTotal
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando notificación: {ex.Message}");
+            }
+        }
+        public async Task<string> GuardarImagenAsync(IFormFile imagen)
+        {
+            if (imagen == null || imagen.Length == 0)
+                return null;
+
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "referencias");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(imagen.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await imagen.CopyToAsync(fileStream);
+            }
+
+            return $"/uploads/referencias/{uniqueFileName}";
+        }
         public async Task<CitaDto?> GetByIdAsync(int id)
         {
             var cita = await _context.Citas
@@ -88,49 +190,6 @@ namespace InkManager.Services.Implementations
             }
 
             return horariosDisponibles;
-        }
-        public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
-        {
-            // Validar disponibilidad del artista
-            var disponible = await ValidarDisponibilidadAsync(dto.ArtistaReferenciaId, dto.FechaHoraInicio, dto.FechaHoraFin);
-            if (!disponible)
-                throw new InvalidOperationException("El artista no está disponible en ese horario");
-
-            var cita = new Cita
-            {
-                UsuarioId = dto.UsuarioId,  // Cliente
-                ArtistaReferenciaId = dto.ArtistaReferenciaId,  // Artista
-                FechaHoraInicio = dto.FechaHoraInicio,
-                FechaHoraFin = dto.FechaHoraFin,
-                PrecioTotal = dto.PrecioTotal,
-                Adelanto = dto.Adelanto,
-                ZonaCuerpoId = dto.ZonaCuerpoId,
-                TamanioCm = dto.TamanioCm,
-                NotasInternas = dto.NotasInternas,
-                NotasPublicas = dto.NotasPublicas,
-                FotoReferenciaUrl = dto.FotoReferenciaUrl,
-                RequiereRecordatorio = dto.RequiereRecordatorio,
-                Estado = "pendiente"
-            };
-
-            _context.Citas.Add(cita);
-            await _context.SaveChangesAsync();
-
-            // Registrar en historial
-            await RegistrarHistorialAsync(cita.Id, null, "pendiente", "sistema", 0, "Cita creada");
-
-            // Si hay adelanto, registrar el pago
-            if (dto.Adelanto > 0)
-            {
-                await RegistrarPagoAsync(cita.Id, new RegistrarPagoDto
-                {
-                    Monto = dto.Adelanto,
-                    MetodoPago = "efectivo",
-                    Nota = "Adelanto inicial"
-                });
-            }
-
-            return (await GetByIdAsync(cita.Id))!;
         }
 
         public async Task<CitaDto?> UpdateAsync(int id, ActualizarCitaDto dto)

@@ -24,38 +24,47 @@
             z-index: 1000;
             animation: slideIn 0.3s ease-out;
         }
+
         @@keyframes slideIn {
-            from
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
 
-        {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         .toast-exit {
             animation: slideOut 0.3s ease-in forwards;
         }
+
         @@keyframes slideOut {
-            from
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
 
-        {
-            transform: translateX(0);
-            opacity: 1;
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
         }
 
-        to {
-            transform: translateX(100%);
-            opacity: 0;
+        .checkbox-custom {
+            width: 1.1rem;
+            height: 1.1rem;
+            border-radius: 0.25rem;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
         }
 
-        }
+            .checkbox-custom:checked {
+                background-color: #8b5cf6;
+                border-color: #8b5cf6;
+            }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
@@ -75,13 +84,21 @@
 
                 <form id="loginForm" onsubmit="return false;">
                     <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-medium mb-2">Correo Electrónico</label>
-                        <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="usuario@ejemplo.com" required>
+                        <label class="block text-gray-700 text-sm font-medium mb-2">Correo o Teléfono</label>
+                        <input type="text" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="usuario@ejemplo.com o 600111222" required>
                     </div>
 
-                    <div class="mb-6">
+                    <div class="mb-4">
                         <label class="block text-gray-700 text-sm font-medium mb-2">Contraseña</label>
                         <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="mb-6 flex items-center justify-between">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" id="rememberMe" class="checkbox-custom" checked>
+                            <span class="ml-2 text-sm text-gray-600">Recordarme por 7 días</span>
+                        </label>
+                        <a href="#" class="text-sm text-purple-600 hover:text-purple-700">¿Olvidaste tu contraseña?</a>
                     </div>
 
                     <button type="submit" onclick="login()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition flex items-center justify-center">
@@ -97,14 +114,14 @@
 
                 <div class="mt-6 text-center text-sm text-gray-500">
                     <p>Credenciales de prueba:</p>
-                    <p class="text-xs mt-1">artista: juan.perez@inkmaster.com / Password123!</p>
-                    <p class="text-xs">asistente: pedro.asistente@inkmaster.com / Password123!</p>
-                    <p class="text-xs">admin: admin@inkmanager.com / Password123!</p>
+                    <p class="text-xs mt-1">🎨 Juan (artista): juan.perez@inkmaster.com / Password123!</p>
+                    <p class="text-xs">🤝 Pedro (asistente): pedro.asistente@inkmaster.com / Password123!</p>
+                    <p class="text-xs">👑 Admin: admin@inkmanager.com / Password123!</p>
                 </div>
             </div>
         </div>
 
-        <!-- Pantalla de Selección de Rol y Estudio -->
+        <!-- Pantalla de Selección -->
         <div id="selectionScreen" class="bg-white rounded-2xl shadow-2xl overflow-hidden hidden">
             <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-center">
                 <div class="text-4xl mb-1">👋</div>
@@ -113,16 +130,26 @@
             </div>
 
             <div class="p-8">
-                <p class="text-gray-600 text-center mb-6">Selecciona cómo quieres acceder al sistema</p>
+                <p class="text-gray-600 text-center mb-6" id="selectionMessage"></p>
 
-                <div class="mb-6">
+                <div id="rolesSection" class="mb-6 hidden">
                     <label class="block text-gray-700 text-sm font-medium mb-3">Tu rol:</label>
                     <div id="rolesContainer" class="grid grid-cols-2 gap-3"></div>
                 </div>
 
-                <div class="mb-6">
+                <div id="estudiosSection" class="mb-6 hidden">
                     <label class="block text-gray-700 text-sm font-medium mb-3">Estudio:</label>
                     <div id="estudiosContainer" class="space-y-2"></div>
+                </div>
+
+                <div id="artistasSection" class="mb-6 hidden">
+                    <label class="block text-gray-700 text-sm font-medium mb-3">Artista al que asistes:</label>
+                    <div id="artistasContainer" class="space-y-2"></div>
+                </div>
+
+                <div class="flex items-center mb-6">
+                    <input type="checkbox" id="rememberMeSelect" class="checkbox-custom" checked>
+                    <label class="ml-2 text-sm text-gray-600">Recordarme por 7 días</label>
                 </div>
 
                 <button onclick="confirmSelection()" id="confirmBtn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -140,6 +167,10 @@
         let userData = null;
         let selectedRolId = null;
         let selectedEstudioId = null;
+        let selectedArtistaId = null;
+        let availableRoles = [];
+        let availableEstudios = [];
+        let availableArtistas = [];
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
@@ -158,8 +189,9 @@
         }
 
         async function login() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
 
             if (!email || !password) {
                 showToast('Por favor completa todos los campos', 'error');
@@ -176,34 +208,27 @@
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, rememberMe })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    userData = result.data;
-
-                    if (userData.token) {
-                        localStorage.setItem('token', userData.token);
-                        localStorage.setItem('session', JSON.stringify({
-                            usuarioId: userData.user.id,
-                            nombre: userData.user.nombre,
-                            email: userData.user.email,
-                            rol: userData.user.roles[0],
-                            estudioId: userData.availableEstudios?.[0]?.estudioId,
-                            estudioNombre: userData.availableEstudios?.[0]?.nombre
-                        }));
-
-                        showToast(userData.message || 'Bienvenido ' + userData.user.nombre, 'success');
+                    if (result.redirectUrl) {
+                        window.location.href = result.redirectUrl;
+                    } else if (result.data?.availableRoles || result.data?.artistasAsistidos) {
+                        userData = result.data;
+                        showSelectionScreen();
+                    } else if (result.data?.redirectUrl) {
+                        window.location.href = result.data.redirectUrl;
+                    } else {
+                        showToast(result.data?.message || 'Login exitoso', 'success');
                         setTimeout(() => {
                             window.location.href = '/dashboard';
                         }, 1000);
-                    } else {
-                        showSelectionScreen();
                     }
                 } else {
-                    showToast(result.data?.message || result.message || 'Credenciales incorrectas', 'error');
+                    showToast(result.message || 'Credenciales incorrectas', 'error');
                 }
             } catch (error) {
                 showToast('Error de conexión con el servidor', 'error');
@@ -220,23 +245,49 @@
             document.getElementById('userName').textContent = userData.user.nombre;
             document.getElementById('userEmail').textContent = userData.user.email;
 
-            const rolesContainer = document.getElementById('rolesContainer');
-            rolesContainer.innerHTML = '';
+            availableRoles = userData.availableRoles || [];
+            availableEstudios = userData.availableEstudios || [];
+            availableArtistas = userData.artistasAsistidos || [];
 
-            userData.availableRoles?.forEach(rol => {
-                const icon = getRolIcon(rol.nombre);
-                const card = document.createElement('div');
-                card.className = `p-3 border-2 rounded-xl cursor-pointer transition text-center role-card ${selectedRolId === rol.rolId ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`;
-                card.onclick = () => selectRol(rol.rolId, card);
-                card.innerHTML = `
-                    <div class="text-2xl mb-1">${icon}</div>
-                    <div class="font-semibold text-gray-800">${capitalize(rol.nombre)}</div>
-                    <div class="text-xs text-gray-500 mt-1">${rol.descripcion || ''}</div>
-                `;
-                rolesContainer.appendChild(card);
-            });
+            const tieneMultiplesRoles = availableRoles.length > 1;
+            const tieneMultiplesEstudios = availableEstudios.length > 1;
+            const esAsistente = availableRoles.some(r => r.nombre === 'asistente') && availableArtistas.length > 0;
+            const esArtistaConMultiplesEstudios = availableRoles.some(r => r.nombre === 'artista') && availableEstudios.length > 1;
 
-            renderEstudios();
+            document.getElementById('rolesSection').classList.toggle('hidden', !tieneMultiplesRoles);
+            document.getElementById('estudiosSection').classList.toggle('hidden', !esArtistaConMultiplesEstudios);
+            document.getElementById('artistasSection').classList.toggle('hidden', !esAsistente);
+
+            let message = '';
+            if (esArtistaConMultiplesEstudios) message = 'Selecciona el estudio donde trabajarás';
+            else if (esAsistente) message = 'Selecciona el artista al que asistirás';
+            else if (tieneMultiplesRoles) message = 'Selecciona el rol con el que quieres acceder';
+
+            document.getElementById('selectionMessage').textContent = message;
+
+            if (tieneMultiplesRoles) {
+                const rolesContainer = document.getElementById('rolesContainer');
+                rolesContainer.innerHTML = '';
+                availableRoles.forEach(rol => {
+                    const icon = getRolIcon(rol.nombre);
+                    const card = document.createElement('div');
+                    card.className = `p-3 border-2 rounded-xl cursor-pointer transition text-center role-card ${selectedRolId === rol.rolId ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`;
+                    card.onclick = () => selectRol(rol.rolId, card);
+                    card.innerHTML = `
+                        <div class="text-2xl mb-1">${icon}</div>
+                        <div class="font-semibold text-gray-800">${capitalize(rol.nombre)}</div>
+                        <div class="text-xs text-gray-500 mt-1">${rol.descripcion || ''}</div>
+                    `;
+                    rolesContainer.appendChild(card);
+                });
+            } else if (availableRoles.length === 1) {
+                selectedRolId = availableRoles[0].rolId;
+            }
+
+            if (esArtistaConMultiplesEstudios) renderEstudios();
+            if (esAsistente) renderArtistas();
+
+            enableConfirmButton();
         }
 
         function selectRol(rolId, card) {
@@ -256,20 +307,21 @@
             enableConfirmButton();
         }
 
+        function selectArtista(artistaId, estudioId) {
+            selectedArtistaId = artistaId;
+            selectedEstudioId = estudioId;
+            renderArtistas();
+            enableConfirmButton();
+        }
+
         function renderEstudios() {
             const container = document.getElementById('estudiosContainer');
-            const estudios = userData.availableEstudios || [];
-
             container.innerHTML = '';
-            estudios.forEach(estudio => {
+            availableEstudios.forEach(estudio => {
                 const isSelected = selectedEstudioId === estudio.estudioId;
                 const div = document.createElement('div');
                 div.className = `flex items-center p-3 border rounded-xl cursor-pointer transition ${isSelected ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`;
-                div.onclick = () => {
-                    selectedEstudioId = estudio.estudioId;
-                    renderEstudios();
-                    enableConfirmButton();
-                };
+                div.onclick = () => selectEstudio(estudio.estudioId);
                 div.innerHTML = `
                     <div class="w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-400'}">
                         ${isSelected ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : ''}
@@ -284,13 +336,47 @@
             });
         }
 
+        function renderArtistas() {
+            const container = document.getElementById('artistasContainer');
+            container.innerHTML = '';
+            availableArtistas.forEach(artista => {
+                const isSelected = selectedArtistaId === artista.artistaId;
+                const div = document.createElement('div');
+                div.className = `flex items-center p-3 border rounded-xl cursor-pointer transition ${isSelected ? 'border-purple-600 bg-purple-50' : 'border-gray-200 hover:border-purple-300'}`;
+                div.onclick = () => selectArtista(artista.artistaId, artista.estudioId);
+                div.innerHTML = `
+                    <div class="w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${isSelected ? 'border-purple-600 bg-purple-600' : 'border-gray-400'}">
+                        ${isSelected ? '<div class="w-2 h-2 bg-white rounded-full"></div>' : ''}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-800">${artista.nombre}</div>
+                        <div class="text-xs text-gray-500">${artista.estudioNombre}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
         function enableConfirmButton() {
             const btn = document.getElementById('confirmBtn');
-            btn.disabled = !(selectedRolId && selectedEstudioId);
+            let enabled = true;
+            if (availableRoles.length > 1 && !selectedRolId) enabled = false;
+            if (availableEstudios.length > 1 && !selectedEstudioId) enabled = false;
+            if (availableArtistas.length > 0 && !selectedArtistaId) enabled = false;
+            btn.disabled = !enabled;
         }
 
         async function confirmSelection() {
-            if (!selectedRolId || !selectedEstudioId) return;
+            const rememberMe = document.getElementById('rememberMeSelect').checked;
+
+            const payload = {
+                usuarioId: userData.user.id,
+                rolId: selectedRolId,
+                rememberMe: rememberMe
+            };
+
+            if (selectedEstudioId) payload.estudioId = selectedEstudioId;
+            if (selectedArtistaId) payload.artistaId = selectedArtistaId;
 
             const btn = document.getElementById('confirmBtn');
             btn.disabled = true;
@@ -300,23 +386,13 @@
                 const response = await fetch('/api/auth/select-role-estudio', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        usuarioId: userData.user.id,
-                        rolId: selectedRolId,
-                        estudioId: selectedEstudioId
-                    })
+                    body: JSON.stringify(payload)
                 });
-
                 const result = await response.json();
 
                 if (result.success) {
-                    localStorage.setItem('token', result.token);
-                    localStorage.setItem('session', JSON.stringify(result.session));
-
                     showToast(result.message, 'success');
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1000);
+                    window.location.href = result.redirectUrl || '/dashboard';
                 } else {
                     showToast(result.message, 'error');
                     btn.disabled = false;
@@ -334,6 +410,7 @@
             document.getElementById('loginScreen').classList.remove('hidden');
             selectedRolId = null;
             selectedEstudioId = null;
+            selectedArtistaId = null;
             userData = null;
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
