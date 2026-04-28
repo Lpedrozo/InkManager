@@ -19,7 +19,6 @@ namespace InkManager.Services.Implementations
 
         public async Task<LoginResponseDto> LoginAsync(LoginDto dto)
         {
-            // Buscar usuario por email o teléfono
             var user = await _context.Usuarios
                 .Include(u => u.UsuarioRoles)
                 .ThenInclude(ur => ur.Rol)
@@ -36,7 +35,6 @@ namespace InkManager.Services.Implementations
                 };
             }
 
-            // Verificar contraseña
             var passwordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(dto.Password));
             if (user.PasswordHash != passwordHash)
             {
@@ -47,7 +45,6 @@ namespace InkManager.Services.Implementations
                 };
             }
 
-            // Obtener roles
             var roles = user.UsuarioRoles.Select(ur => new RolInfoDto
             {
                 RolId = ur.RolId,
@@ -55,7 +52,6 @@ namespace InkManager.Services.Implementations
                 Descripcion = ur.Rol.Descripcion ?? string.Empty
             }).ToList();
 
-            // Obtener estudios
             var estudios = user.EstudioUsuarios.Select(eu => new EstudioInfoDto
             {
                 EstudioId = eu.EstudioId,
@@ -66,7 +62,6 @@ namespace InkManager.Services.Implementations
                 HorarioLaboral = eu.HorarioLaboral
             }).ToList();
 
-            // Obtener artistas asistidos (si es asistente)
             var artistasAsistidos = new List<ArtistaAsistidoDto>();
             if (roles.Any(r => r.Nombre == "asistente"))
             {
@@ -104,7 +99,6 @@ namespace InkManager.Services.Implementations
                 Estudios = estudios
             };
 
-            // Crear claims para el usuario
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -113,18 +107,19 @@ namespace InkManager.Services.Implementations
                 new Claim("Telefono", user.Telefono ?? "")
             };
 
-            // Agregar roles como claims
             foreach (var rol in roles)
             {
                 claims.Add(new Claim(ClaimTypes.Role, rol.Nombre));
             }
 
-            // Caso 1: Artista con un solo estudio → sesión directa
+            // Caso 1: Artista con un solo estudio
             if (roles.Any(r => r.Nombre == "artista") && estudios.Count == 1 && artistasAsistidos.Count == 0)
             {
                 claims.Add(new Claim("EstudioId", estudios[0].EstudioId.ToString()));
                 claims.Add(new Claim("EstudioNombre", estudios[0].Nombre));
                 claims.Add(new Claim("RolSeleccionado", "artista"));
+                claims.Add(new Claim("ArtistaId", user.Id.ToString()));
+                claims.Add(new Claim("ArtistaNombre", user.Nombre));
 
                 user.UltimoAcceso = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
@@ -138,7 +133,7 @@ namespace InkManager.Services.Implementations
                 };
             }
 
-            // Caso 2: Artista con múltiples estudios → necesita seleccionar
+            // Caso 2: Artista con múltiples estudios
             if (roles.Any(r => r.Nombre == "artista") && estudios.Count > 1)
             {
                 return new LoginResponseDto
@@ -151,7 +146,7 @@ namespace InkManager.Services.Implementations
                 };
             }
 
-            // Caso 3: Asistente → necesita seleccionar artista
+            // Caso 3: Asistente
             if (roles.Any(r => r.Nombre == "asistente") && artistasAsistidos.Any())
             {
                 return new LoginResponseDto
@@ -168,6 +163,8 @@ namespace InkManager.Services.Implementations
             if (roles.Count == 1)
             {
                 claims.Add(new Claim("RolSeleccionado", roles[0].Nombre));
+                claims.Add(new Claim("ArtistaId", user.Id.ToString()));
+                claims.Add(new Claim("ArtistaNombre", user.Nombre));
 
                 if (estudios.Any())
                 {
@@ -187,7 +184,6 @@ namespace InkManager.Services.Implementations
                 };
             }
 
-            // Caso 5: Múltiples opciones
             return new LoginResponseDto
             {
                 Success = true,
@@ -211,7 +207,6 @@ namespace InkManager.Services.Implementations
             if (user == null)
                 throw new Exception("Usuario no encontrado");
 
-            // Verificar que el rol pertenezca al usuario
             var rol = user.UsuarioRoles.FirstOrDefault(ur => ur.RolId == dto.RolId);
             if (rol == null)
                 throw new Exception("Rol no válido para este usuario");
@@ -223,7 +218,9 @@ namespace InkManager.Services.Implementations
                 new Claim(ClaimTypes.Email, user.Email ?? ""),
                 new Claim(ClaimTypes.Role, rol.Rol.Nombre),
                 new Claim("Telefono", user.Telefono ?? ""),
-                new Claim("RolSeleccionado", rol.Rol.Nombre)
+                new Claim("RolSeleccionado", rol.Rol.Nombre),
+                new Claim("ArtistaId", user.Id.ToString()),
+                new Claim("ArtistaNombre", user.Nombre)
             };
 
             // Si es artista, necesita estudio
@@ -242,6 +239,7 @@ namespace InkManager.Services.Implementations
             {
                 var asistente = await _context.Asistentes
                     .Include(a => a.ArtistaAsistido)
+                    .Include(a => a.Estudio)
                     .FirstOrDefaultAsync(a => a.UsuarioId == user.Id && a.ArtistaAsistidoId == dto.ArtistaId.Value && a.Activo);
 
                 if (asistente == null)
@@ -253,7 +251,6 @@ namespace InkManager.Services.Implementations
                 claims.Add(new Claim("EstudioNombre", asistente.Estudio?.Nombre ?? ""));
             }
 
-            // Actualizar último acceso
             user.UltimoAcceso = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

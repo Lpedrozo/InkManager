@@ -34,8 +34,7 @@
     </div>
 </div>
 
-<!-- MODAL CREAR CITA (responsive) -->
-<!-- MODAL CREAR CITA (con inputs corregidos) -->
+<!-- MODAL CREAR CITA -->
 <div id="modalCrear" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
@@ -48,7 +47,6 @@
                 </button>
             </div>
         </div>
-
 
         <div class="p-4 md:p-6">
             <form id="formCita" onsubmit="return false;">
@@ -72,6 +70,7 @@
                                 </button>
                             </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">
                                 Estudio <span class="text-red-500">*</span>
@@ -79,6 +78,7 @@
                             <input type="text" id="estudioNombre" class="w-full rounded-lg border-gray-300 bg-gray-100" readonly disabled>
                             <input type="hidden" id="estudioId">
                         </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">
                                 Artista <span class="text-red-500">*</span>
@@ -99,7 +99,7 @@
                                     Hora <span class="text-red-500">*</span>
                                 </label>
                                 <select id="horaCita" required disabled>
-                                    <option value="">Primero selecciona artista y fecha</option>
+                                    <option value="">Primero selecciona fecha</option>
                                 </select>
                             </div>
                         </div>
@@ -120,12 +120,14 @@
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Precio Total</label>
                                 <div class="input-with-icon">
+                                    <span>$</span>
                                     <input type="number" step="0.01" id="precioTotal" placeholder="0.00">
                                 </div>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Adelanto</label>
                                 <div class="input-with-icon">
+                                    <span>$</span>
                                     <input type="number" step="0.01" id="adelanto" placeholder="0.00">
                                 </div>
                             </div>
@@ -136,7 +138,7 @@
                             <div class="flex items-end pb-2">
                                 <label class="flex items-center cursor-pointer">
                                     <input type="checkbox" id="requiereRecordatorio" class="w-4 h-4 mr-2" checked>
-                                    <span class="text-sm text-gray-700">Recordatorio</span>
+                                    <span class="text-sm text-gray-700">📧 Recordatorio</span>
                                 </label>
                             </div>
                         </div>
@@ -145,6 +147,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Notas Internas</label>
                             <textarea id="notasInternas" rows="3" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
                         </div>
+
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Imagen de Referencia</label>
                             <div class="flex flex-col sm:flex-row gap-2">
@@ -158,7 +161,7 @@
                         </div>
                     </div>
 
-                    <!-- Columna derecha - Zonas del cuerpo (sin cambios) -->
+                    <!-- Columna derecha - Zonas del cuerpo -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
                             📍 Zona del Cuerpo <span class="text-red-500">*</span>
@@ -211,7 +214,8 @@
         </div>
     </div>
 </div>
-<!-- MODAL CLIENTE RÁPIDO (dentro de citas) -->
+
+<!-- MODAL CLIENTE RÁPIDO -->
 <div id="modalClienteRapido" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60] p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div class="p-4 border-b sticky top-0 bg-white rounded-t-xl">
@@ -250,7 +254,8 @@
         </div>
     </div>
 </div>
-<!-- MODAL DETALLE CITA (SPA) -->
+
+<!-- MODAL DETALLE CITA -->
 <div id="modalDetalle" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
@@ -285,8 +290,11 @@
         let categoriaActual = 'todas';
         let selectedZonaId = null;
         let currentCitaId = null;
-                let clienteRapidoCallback = null;
+        let clienteRapidoCallback = null;
 
+        // ============================================
+        // Modal Cliente Rápido
+        // ============================================
         window.abrirModalClienteRapido = function(callback) {
             clienteRapidoCallback = callback;
             document.getElementById('modalClienteRapido').classList.remove('hidden');
@@ -317,21 +325,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nombre, telefono, email: email || null })
                 });
-
                 const result = await response.json();
 
                 if (result.success) {
                     showToast('Cliente creado exitosamente', 'success');
                     cerrarModalClienteRapido();
-
-                    // Recargar la lista de clientes en el select
                     await cargarClientes();
-
-                    // Seleccionar el cliente recién creado
                     const select = document.getElementById('clienteId');
                     select.value = result.data.id;
-
-                    // Si hay callback, ejecutarlo
                     if (clienteRapidoCallback) {
                         clienteRapidoCallback(result.data);
                         clienteRapidoCallback = null;
@@ -346,13 +347,66 @@
                 btn.innerHTML = 'Crear Cliente';
             }
         };
+
+                // ============================================
+        // Obtener usuario actual (desde cookie)
+        // ============================================
+        async function cargarUsuarioActual() {
+            try {
+                console.log('Cargando usuario actual...');
+                const response = await fetch('/api/auth/me');
+                const result = await response.json();
+                console.log('Respuesta de /api/auth/me:', result);
+
+                if (result.success) {
+                    const user = result.data;
+
+                    // Verificar que los elementos existan antes de asignar valores
+                    const artistaNombreInput = document.getElementById('artistaNombre');
+                    const artistaIdInput = document.getElementById('artistaId');
+                    const estudioNombreInput = document.getElementById('estudioNombre');
+                    const estudioIdInput = document.getElementById('estudioId');
+
+                    console.log('Elementos encontrados:', {
+                        artistaNombre: !!artistaNombreInput,
+                        artistaId: !!artistaIdInput,
+                        estudioNombre: !!estudioNombreInput,
+                        estudioId: !!estudioIdInput
+                    });
+
+                    if (artistaNombreInput) {
+                        artistaNombreInput.value = user.artistaNombre || user.nombre || '';
+                        console.log('artistaNombre asignado:', artistaNombreInput.value);
+                    }
+                    if (artistaIdInput) artistaIdInput.value = user.artistaId || user.usuarioId || '';
+                    if (estudioNombreInput) estudioNombreInput.value = user.estudioNombre || '';
+                    if (estudioIdInput) estudioIdInput.value = user.estudioId || '';
+
+                    // Actualizar sidebar
+                    const userNameNav = document.getElementById('userNameNav');
+                    const userRolNav = document.getElementById('userRolNav');
+                    if (userNameNav) userNameNav.textContent = user.nombre || 'Usuario';
+                    if (userRolNav) userRolNav.textContent = user.rol || 'Usuario';
+                } else {
+                    console.error('Error en la respuesta:', result);
+                }
+            } catch (error) {
+                console.error('Error cargando usuario:', error);
+            }
+        }
         // ============================================
         // Inicialización
         // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, inicializando...');
             inicializarCalendario();
             cargarClientes();
-            cargarArtistaActual();            
+
+            // Pequeño retraso para asegurar que el modal esté listo si se abre
+            setTimeout(() => {
+                cargarUsuarioActual();
+            }, 100);
+
             cargarZonasCuerpo();
             cargarProximasCitas();
         });
@@ -372,8 +426,7 @@
                 },
                 events: async function(fetchInfo, successCallback) {
                     try {
-                        const session = JSON.parse(localStorage.getItem('session') || '{}');
-                        const response = await fetch(`/api/citas?artistaReferenciaId=${session.estudioId}&fechaInicio=${fetchInfo.start.toISOString()}&fechaFin=${fetchInfo.end.toISOString()}`);
+                        const response = await fetch(`/api/citas?fechaInicio=${fetchInfo.start.toISOString()}&fechaFin=${fetchInfo.end.toISOString()}`);
                         const result = await response.json();
                         if (result.success) {
                             const eventos = result.data.items.map(cita => ({
@@ -421,14 +474,7 @@
                 console.error('Error cargando clientes:', error);
             }
         }
-        async function cargarArtistaActual() {
-            const session = JSON.parse(localStorage.getItem('session') || '{}');
-            const artistaNombre = session.artistaNombre || session.nombre;
-            const artistaId = session.artistaId || session.usuarioId;
 
-            document.getElementById('artistaNombre').value = artistaNombre;
-            document.getElementById('artistaId').value = artistaId;
-        }
         async function cargarZonasCuerpo() {
             try {
                 const response = await fetch('/api/zonas-cuerpo');
@@ -500,13 +546,13 @@
         // ============================================
         // Horarios
         // ============================================
-        document.getElementById('artistaId')?.addEventListener('change', cargarHorarios);
         document.getElementById('fechaCita')?.addEventListener('change', cargarHorarios);
 
         async function cargarHorarios() {
-            const fecha = document.getElementById('fechaCita').value;
             const artistaId = document.getElementById('artistaId').value;
+            const fecha = document.getElementById('fechaCita').value;
             if (!artistaId || !fecha) return;
+
             const horaSelect = document.getElementById('horaCita');
             horaSelect.disabled = true;
             horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
@@ -519,8 +565,11 @@
                     horaSelect.innerHTML = '<option value="">-- Seleccionar hora --</option>';
                     result.data.forEach(slot => {
                         const option = document.createElement('option');
-                        option.value = slot.horaInicio;
-                        option.textContent = slot.display;
+                        // Extraer solo la hora en formato HH:MM del Display
+                        // El Display viene como "09:00 - 10:00"
+                        const horaDisplay = slot.display.split(' - ')[0];
+                        option.value = horaDisplay; // Esto será "09:00"
+                        option.textContent = slot.display; // Esto será "09:00 - 10:00"
                         horaSelect.appendChild(option);
                     });
                     horaSelect.disabled = false;
@@ -529,18 +578,16 @@
                     horaSelect.disabled = true;
                 }
             } catch (error) {
+                console.error('Error cargando horarios:', error);
                 horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
                 horaSelect.disabled = true;
             }
-        }
-
-        // ============================================
+        }        // ============================================
         // Listado de citas
         // ============================================
         async function cargarProximasCitas() {
-            const session = JSON.parse(localStorage.getItem('session') || '{}');
             try {
-                const response = await fetch(`/api/citas?artistaReferenciaId=${session.estudioId}&estado=pendiente&estado=confirmada&pageSize=10`);
+                const response = await fetch(`/api/citas?estado=pendiente&estado=confirmada&pageSize=10`);
                 const result = await response.json();
 
                 if (result.success && result.data.items) {
@@ -601,7 +648,7 @@
         // ============================================
         // Detalle de cita (SPA)
         // ============================================
-                window.verDetalleCita = async function(id) {
+        window.verDetalleCita = async function(id) {
             currentCitaId = id;
             const modal = document.getElementById('modalDetalle');
             const content = document.getElementById('detalleContent');
@@ -620,16 +667,12 @@
                     const fechaInicio = new Date(cita.fechaHoraInicio);
                     const fechaFin = new Date(cita.fechaHoraFin);
 
-                    // Construir HTML de la imagen si existe
                     let imagenHtml = '';
                     if (cita.fotoReferenciaUrl) {
                         imagenHtml = `
                             <div class="bg-gray-50 p-3 rounded-lg">
                                 <p class="text-xs text-gray-500 mb-2">📷 Imagen de Referencia</p>
-                                <img src="${cita.fotoReferenciaUrl}"
-                                     class="w-full max-w-xs rounded-lg shadow-md cursor-pointer hover:opacity-90 transition"
-                                     onclick="window.open('${cita.fotoReferenciaUrl}', '_blank')"
-                                     alt="Referencia del diseño">
+                                <img src="${cita.fotoReferenciaUrl}" class="w-full max-w-xs rounded-lg shadow-md cursor-pointer hover:opacity-90 transition" onclick="window.open('${cita.fotoReferenciaUrl}', '_blank')" alt="Referencia del diseño">
                             </div>
                         `;
                     }
@@ -669,12 +712,7 @@
                                 </div>
                             </div>
                             ${imagenHtml}
-                            ${cita.notasInternas ? `
-                            <div class="bg-gray-50 p-3 rounded-lg">
-                                <p class="text-xs text-gray-500">Notas Internas</p>
-                                <p class="text-sm">${escapeHtml(cita.notasInternas)}</p>
-                            </div>
-                            ` : ''}
+                            ${cita.notasInternas ? `<div class="bg-gray-50 p-3 rounded-lg"><p class="text-xs text-gray-500">Notas Internas</p><p class="text-sm">${escapeHtml(cita.notasInternas)}</p></div>` : ''}
                         </div>
                     `;
 
@@ -744,10 +782,10 @@
             document.getElementById('zonaSeleccionada').classList.add('hidden');
             document.getElementById('zonaCuerpoId').value = '';
             document.getElementById('horaCita').disabled = true;
-            document.getElementById('horaCita').innerHTML = '<option value="">Primero selecciona artista y fecha</option>';
-
+            document.getElementById('horaCita').innerHTML = '<option value="">Primero selecciona fecha</option>';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('fechaCita').min = today;
+            cargarUsuarioActual();
         };
 
         window.cerrarModalCrear = function() {
@@ -760,16 +798,21 @@
             const clienteId = document.getElementById('clienteId').value;
             const artistaId = document.getElementById('artistaId').value;
             const fecha = document.getElementById('fechaCita').value;
-            const horaInicio = document.getElementById('horaCita').value;
+            let horaInicio = document.getElementById('horaCita').value;
             const duracion = parseInt(document.getElementById('duracion').value);
             const fotoReferencia = document.getElementById('fotoReferencia').files[0];
 
+            // Logs para depuración
+            console.log('Valores capturados:', { clienteId, artistaId, fecha, horaInicio, duracion, selectedZonaId });
+
+            // Validaciones básicas
             if (!clienteId) { showToast('Selecciona un cliente', 'error'); return; }
-            if (!artistaId) { showToast('Selecciona un artista', 'error'); return; }
+            if (!artistaId) { showToast('Error: No se pudo identificar al artista', 'error'); return; }
             if (!fecha) { showToast('Selecciona una fecha', 'error'); return; }
             if (!horaInicio) { showToast('Selecciona una hora', 'error'); return; }
             if (!selectedZonaId) { showToast('Selecciona la zona del cuerpo', 'error'); return; }
 
+            // Validar que la fecha no sea pasada
             const fechaSeleccionada = new Date(fecha);
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
@@ -779,7 +822,31 @@
                 return;
             }
 
-            const fechaHoraInicio = new Date(`${fecha}T${horaInicio}`);
+            // Limpiar el formato de hora - esperamos algo como "09:00"
+            // Si viene con formato raro, extraer solo los primeros 5 caracteres
+            if (horaInicio && horaInicio.length > 5) {
+                horaInicio = horaInicio.substring(0, 5);
+            }
+
+            // Asegurar que tenga formato HH:MM
+            if (horaInicio && !horaInicio.includes(':')) {
+                horaInicio = `${horaInicio.padStart(2, '0')}:00`;
+            }
+
+            console.log('Hora formateada:', horaInicio);
+
+            const fechaHoraInicioStr = `${fecha}T${horaInicio}`;
+            console.log('fechaHoraInicioStr:', fechaHoraInicioStr);
+
+            const fechaHoraInicio = new Date(fechaHoraInicioStr);
+            console.log('fechaHoraInicio objeto:', fechaHoraInicio);
+
+            // Validar que la fecha sea válida
+            if (isNaN(fechaHoraInicio.getTime())) {
+                showToast(`Formato de fecha/hora inválido: ${fechaHoraInicioStr}`, 'error');
+                return;
+            }
+
             const fechaHoraFin = new Date(fechaHoraInicio.getTime() + duracion * 60 * 60 * 1000);
 
             if (fechaHoraFin <= fechaHoraInicio) {
@@ -812,7 +879,6 @@
                     method: 'POST',
                     body: formData
                 });
-
                 const result = await response.json();
 
                 if (result.success) {
@@ -824,15 +890,13 @@
                     showToast(result.message || 'Error al crear la cita', 'error');
                 }
             } catch (error) {
+                console.error('Error:', error);
                 showToast('Error de conexión con el servidor', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Guardar Cita';
             }
-        };
-
-        // Vista previa de imagen
-        document.getElementById('fotoReferencia')?.addEventListener('change', function(e) {
+        };        document.getElementById('fotoReferencia')?.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();

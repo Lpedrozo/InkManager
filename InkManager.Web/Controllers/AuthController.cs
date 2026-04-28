@@ -21,7 +21,6 @@ namespace InkManager.Web.Controllers
         [HttpGet("/login")]
         public IActionResult Login()
         {
-            // Si ya está autenticado, redirigir al dashboard
             if (User.Identity?.IsAuthenticated == true)
             {
                 return RedirectToAction("Index", "Dashboard");
@@ -56,7 +55,6 @@ namespace InkManager.Web.Controllers
                 return BadRequest(new { success = false, message = result.Message });
             }
 
-            // Si ya tiene claims (login directo), crear cookie
             if (result.Claims != null && result.Claims.Any())
             {
                 var identity = new ClaimsIdentity(result.Claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -69,11 +67,9 @@ namespace InkManager.Web.Controllers
                 };
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-
-                return Ok(new { success = true, data = result, redirectUrl = "/dashboard" });
+                return Ok(new { success = true, redirectUrl = "/dashboard" });
             }
 
-            // Si necesita selección, devolver opciones
             return Ok(new { success = true, data = result });
         }
 
@@ -100,13 +96,33 @@ namespace InkManager.Web.Controllers
                 };
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-
                 return Ok(new { success = true, message = result.Message, redirectUrl = "/dashboard" });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
+        }
+
+        [HttpGet("/api/auth/me")]
+        public IActionResult GetCurrentUser()
+        {
+            if (!User.Identity?.IsAuthenticated == true)
+                return Unauthorized(new { success = false, message = "No autenticado" });
+
+            var userData = new
+            {
+                usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                nombre = User.FindFirst(ClaimTypes.Name)?.Value,
+                email = User.FindFirst(ClaimTypes.Email)?.Value,
+                rol = User.FindFirst(ClaimTypes.Role)?.Value,
+                artistaId = User.FindFirst("ArtistaId")?.Value,
+                artistaNombre = User.FindFirst("ArtistaNombre")?.Value,
+                estudioId = User.FindFirst("EstudioId")?.Value,
+                estudioNombre = User.FindFirst("EstudioNombre")?.Value
+            };
+
+            return Ok(new { success = true, data = userData });
         }
 
         [HttpPost("/api/auth/logout")]

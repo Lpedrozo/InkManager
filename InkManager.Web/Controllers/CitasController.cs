@@ -154,6 +154,19 @@ namespace InkManager.Web.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+        // GET: /api/citas/estadisticas (para el dashboard)
+        [HttpGet("/api/citas/estadisticas")]
+        public async Task<IActionResult> GetEstadisticasPorArtista()
+        {
+            var artistaIdClaim = User.FindFirst("ArtistaId")?.Value;
+            var artistaId = artistaIdClaim != null ? int.Parse(artistaIdClaim) : 0;
+
+            if (artistaId == 0)
+                return BadRequest(new { success = false, message = "No se pudo identificar al artista" });
+
+            var estadisticas = await _citaService.GetEstadisticasPorEstadoAsync(artistaId);
+            return Ok(new { success = true, data = estadisticas });
+        }
         // GET: /api/citas/{id}/pagos
         [HttpGet("/api/citas/{id}/pagos")]
         public async Task<IActionResult> GetPagos(int id)
