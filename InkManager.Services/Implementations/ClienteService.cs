@@ -219,48 +219,75 @@ namespace InkManager.Services.Implementations
 
         public async Task<PagedResult<ClienteDto>> GetAllAsync(int pagina = 1, int pageSize = 10, string? search = null)
         {
-            var artistaId = GetArtistaIdActual();
-            if (artistaId == 0)
+            try
             {
+                var artistaId = GetArtistaIdActual();
+                Console.WriteLine($"GetAllAsync - artistaId: {artistaId}");
+
+                if (artistaId == 0)
+                {
+                    return new PagedResult<ClienteDto>
+                    {
+                        Items = new List<ClienteDto>(),
+                        TotalCount = 0,
+                        PageNumber = pagina,
+                        PageSize = pageSize
+                    };
+                }
+
+                // Consulta más simple sin ThenInclude
+                var query = _context.ClientesArtistas
+                    .Where(ca => ca.ArtistaId == artistaId)
+                    .Select(ca => ca.Cliente);
+
+                if (!string.IsNullOrEmpty(search))
+                {
+                    query = query.Where(u => u.Nombre.Contains(search) ||
+                                             u.Telefono.Contains(search) ||
+                                             (u.Email != null && u.Email.Contains(search)));
+                }
+
+                var totalCount = await query.CountAsync();
+                Console.WriteLine($"GetAllAsync - totalCount: {totalCount}");
+
+                // Simplificar el ordenamiento y paginación
+                var items = await query
+                    .Skip((pagina - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                Console.WriteLine($"GetAllAsync - items obtenidos: {items.Count}");
+
+                var clientesDto = new List<ClienteDto>();
+                foreach (var usuario in items)
+                {
+                    clientesDto.Add(new ClienteDto
+                    {
+                        Id = usuario.Id,
+                        Nombre = usuario.Nombre,
+                        Email = usuario.Email,
+                        Telefono = usuario.Telefono,
+                        FotoPerfilUrl = usuario.FotoPerfilUrl,
+                        FechaRegistro = usuario.FechaCreacion,
+                        TotalCitas = await _context.Citas.CountAsync(c => c.UsuarioId == usuario.Id && c.Estado == "completada"),
+                        TotalGastado = await _context.Citas.Where(c => c.UsuarioId == usuario.Id && c.Estado == "completada").SumAsync(c => c.PrecioTotal)
+                    });
+                }
+
                 return new PagedResult<ClienteDto>
                 {
-                    Items = new List<ClienteDto>(),
-                    TotalCount = 0,
+                    Items = clientesDto,
+                    TotalCount = totalCount,
                     PageNumber = pagina,
                     PageSize = pageSize
                 };
             }
-
-            var query = _context.ClientesArtistas
-                .Include(ca => ca.Cliente)
-                    .ThenInclude(c => c.UsuarioRoles)
-                .Include(ca => ca.Cliente)
-                    .ThenInclude(c => c.CitasComoCliente)
-                .Where(ca => ca.ArtistaId == artistaId)
-                .Select(ca => ca.Cliente);
-
-            if (!string.IsNullOrEmpty(search))
+            catch (Exception ex)
             {
-                query = query.Where(u => u.Nombre.Contains(search) ||
-                                         u.Telefono.Contains(search) ||
-                                         (u.Email != null && u.Email.Contains(search)));
+                Console.WriteLine($"Error en GetAllAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw;
             }
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .OrderByDescending(u => u.FechaCreacion)
-                .Skip((pagina - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedResult<ClienteDto>
-            {
-                Items = items.Select(u => MapToDto(u, null)).ToList(),
-                TotalCount = totalCount,
-                PageNumber = pagina,
-                PageSize = pageSize
-            };
         }
 
         public async Task<int> GetTotalClientesAsync()

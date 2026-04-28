@@ -35,16 +35,24 @@ namespace InkManager.Core.Entities
 
         public DateTime? FechaRecordatorioEnviado { get; set; }
 
-        // Foreign keys - NUEVAS (reemplazan ClienteId, ArtistaId, AsistenteId)
+        // Foreign keys
         public int UsuarioId { get; set; } // Cliente que agenda
         public int ArtistaReferenciaId { get; set; } // Artista que atiende
         public int? ZonaCuerpoId { get; set; }
 
-        // Navigation properties - NUEVAS
+        // Nuevo campo: Estudio donde se realiza la cita
+        public int? EstudioId { get; set; }
+
+        // Navigation properties
         public virtual Usuario Usuario { get; set; } = null!; // Cliente
         public virtual Usuario ArtistaReferencia { get; set; } = null!; // Artista
         public virtual ZonaCuerpo? ZonaCuerpo { get; set; }
+        public virtual Estudio? Estudio { get; set; } // Estudio donde se realiza
+        [MaxLength(200)]
+        public string? GoogleEventIdArtista { get; set; }
 
+        [MaxLength(200)]
+        public string? GoogleEventIdEstudio { get; set; }
         // Colecciones
         public virtual ICollection<PagoParcial> PagosParciales { get; set; } = new List<PagoParcial>();
         public virtual ICollection<HistorialEstadoCita> HistorialEstados { get; set; } = new List<HistorialEstadoCita>();

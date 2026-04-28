@@ -6,6 +6,7 @@ using InkManager.Services.Interfaces;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
 
 namespace InkManager.Services.Implementations
@@ -146,7 +147,7 @@ namespace InkManager.Services.Implementations
         public async Task<CitaDto> CreateAsync(CrearCitaDto dto)
         {
             var artistaId = GetArtistaIdActual();
-            var estudioId = GetEstudioIdActual();
+            var estudioId = dto.EstudioId ?? GetEstudioIdActual(); // Usar el del DTO o el de la sesión
 
             // Validar que el artista pertenece al estudio seleccionado
             var pertenece = await _context.EstudioUsuarios
@@ -170,7 +171,8 @@ namespace InkManager.Services.Implementations
             var cita = new Cita
             {
                 UsuarioId = dto.UsuarioId,
-                ArtistaReferenciaId = artistaId, // Usar el artista de la sesión, no el del DTO
+                ArtistaReferenciaId = artistaId,
+                EstudioId = estudioId, // ← AGREGAR ESTUDIOID
                 FechaHoraInicio = dto.FechaHoraInicio,
                 FechaHoraFin = dto.FechaHoraFin,
                 PrecioTotal = dto.PrecioTotal,
@@ -183,9 +185,6 @@ namespace InkManager.Services.Implementations
                 RequiereRecordatorio = dto.RequiereRecordatorio,
                 Estado = "pendiente"
             };
-
-            // Agregar el estudio de referencia (opcional, para saber dónde se atiende)
-            // cita.EstudioId = estudioId; // Si agregas esta columna
 
             _context.Citas.Add(cita);
             await _context.SaveChangesAsync();
@@ -203,6 +202,22 @@ namespace InkManager.Services.Implementations
             }
 
             await EnviarNotificacionArtistaAsync(cita.Id);
+
+            // Sincronizar con Google Calendar
+            try
+            {
+                var googleCalendarService = _httpContextAccessor.HttpContext?.RequestServices
+                    .GetRequiredService<IGoogleCalendarService>();
+
+                if (googleCalendarService != null)
+                {
+                    await googleCalendarService.SyncCitaConGoogleAsync(cita.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sincronizando con Google Calendar: {ex.Message}");
+            }
 
             return (await GetByIdAsync(cita.Id))!;
         }

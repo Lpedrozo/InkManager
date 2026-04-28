@@ -101,7 +101,15 @@ namespace InkManager.Infrastructure.Data
             // ============================================
             modelBuilder.Entity<Asistente>()
                 .HasKey(a => a.Id);
+            modelBuilder.Entity<Cita>()
+    .HasIndex(c => c.GoogleEventIdArtista)
+    .IsUnique()
+    .HasFilter("[GoogleEventIdArtista] IS NOT NULL");
 
+            modelBuilder.Entity<Cita>()
+                .HasIndex(c => c.GoogleEventIdEstudio)
+                .IsUnique()
+                .HasFilter("[GoogleEventIdEstudio] IS NOT NULL");
             modelBuilder.Entity<Asistente>()
                 .HasOne(a => a.Usuario)
                 .WithOne(u => u.AsistenteAsignado)
@@ -189,7 +197,11 @@ namespace InkManager.Infrastructure.Data
                 .WithMany(z => z.Citas)
                 .HasForeignKey(c => c.ZonaCuerpoId)
                 .OnDelete(DeleteBehavior.SetNull);
-
+            modelBuilder.Entity<Cita>()
+                .HasOne(c => c.Estudio)
+                .WithMany()
+                .HasForeignKey(c => c.EstudioId)
+                .OnDelete(DeleteBehavior.SetNull);
             // ============================================
             // Configuración de Pagos
             // ============================================

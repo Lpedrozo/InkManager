@@ -25,6 +25,19 @@ namespace InkManager.Core.Entities
 
         public bool Activo { get; set; } = true;
 
+        // Tokens para Google Calendar
+        [MaxLength(2000)]
+        public string? AccessToken { get; set; }
+
+        [MaxLength(2000)]
+        public string? RefreshToken { get; set; }
+
+        public DateTime? TokenExpiry { get; set; }
+
+        public bool IsSynced { get; set; } = false;
+
+        public DateTime? LastSync { get; set; }
+
         // Navigation properties
         public virtual ICollection<EventoCalendario> Eventos { get; set; } = new List<EventoCalendario>();
     }
