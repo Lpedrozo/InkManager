@@ -1,0 +1,347 @@
+﻿@{
+    ViewData["Title"] = "Reporte de Ingresos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">💰 Reporte de Ingresos</h1>
+            <p class="text-gray-500 mt-1">Visualiza y analiza tus ingresos</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="exportarExcel()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Exportar Excel
+            </button>
+            <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Imprimir
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                <input type="date" id="fechaInicio" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                <input type="date" id="fechaFin" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Artista</label>
+                <select id="filtroArtista" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                    <option value="">Todos los artistas</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estudio</label>
+                <select id="filtroEstudio" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                    <option value="">Todos los estudios</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex justify-end mt-4">
+            <button onclick="cargarReporte()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition">
+                Aplicar Filtros
+            </button>
+        </div>
+    </div>
+
+    <!-- Tarjetas de resumen -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+            <p class="text-gray-500 text-sm">Ingresos Totales</p>
+            <p class="text-2xl font-bold text-green-600" id="totalIngresos">$0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm">Citas Completadas</p>
+            <p class="text-2xl font-bold text-blue-600" id="totalCitas">0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm">Adelantos Recibidos</p>
+            <p class="text-2xl font-bold text-purple-600" id="totalAdelantos">$0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+            <p class="text-gray-500 text-sm">Pagos Parciales</p>
+            <p class="text-2xl font-bold text-yellow-600" id="totalPagosParciales">$0</p>
+        </div>
+    </div>
+
+    <!-- Tarjetas adicionales -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <p class="text-gray-500 text-sm">Total Pagado</p>
+            <p class="text-2xl font-bold text-green-600" id="totalPagado">$0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <p class="text-gray-500 text-sm">Saldo Pendiente</p>
+            <p class="text-2xl font-bold text-orange-600" id="saldoPendiente">$0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <p class="text-gray-500 text-sm">Ticket Promedio</p>
+            <p class="text-2xl font-bold text-blue-600" id="ticketPromedio">$0</p>
+        </div>
+    </div>
+
+    <!-- Gráfico de ingresos por mes -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">📈 Ingresos por Mes</h3>
+        <canvas id="chartIngresos" height="100"></canvas>
+    </div>
+
+    <!-- Top Artistas -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">🏆 Top Artistas por Ingresos</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Artista</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Citas</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaTopArtistas" class="divide-y divide-gray-200">
+                    <tr><td colspan="3" class="text-center py-8 text-gray-500">Cargando...</td〉</tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tabla de citas -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-800">📋 Detalle de Citas</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Artista</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estudio</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Precio</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Pagado</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Saldo</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaIngresos" class="divide-y divide-gray-200">
+                    <tr><td colspan="7" class="text-center py-8 text-gray-500">Cargando datos...</td〉</tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let chartIngresos = null;
+
+        async function cargarReporte() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            const artistaId = document.getElementById('filtroArtista').value;
+            const estudioId = document.getElementById('filtroEstudio').value;
+
+            let url = `/api/reportes/ingresos?`;
+            if (fechaInicio) url += `fechaInicio=${fechaInicio}&`;
+            if (fechaFin) url += `fechaFin=${fechaFin}&`;
+            if (artistaId) url += `artistaId=${artistaId}&`;
+            if (estudioId) url += `estudioId=${estudioId}`;
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderizarResumen(result.data);
+                    renderizarTabla(result.data.citas);
+                    renderizarGrafico(result.data.ingresosPorMes);
+                    renderizarTopArtistas(result.data.ingresosPorArtista);
+                }
+            } catch (error) {
+                console.error('Error cargando reporte:', error);
+                showToast('Error al cargar el reporte', 'error');
+            }
+        }
+
+        function renderizarResumen(data) {
+            document.getElementById('totalIngresos').textContent = `$${data.totalIngresos.toLocaleString()}`;
+            document.getElementById('totalCitas').textContent = data.totalCitas;
+            document.getElementById('totalAdelantos').textContent = `$${data.totalAdelantos.toLocaleString()}`;
+            document.getElementById('totalPagosParciales').textContent = `$${data.totalPagosParciales.toLocaleString()}`;
+            document.getElementById('totalPagado').textContent = `$${data.totalPagado.toLocaleString()}`;
+            document.getElementById('saldoPendiente').textContent = `$${data.saldoPendiente.toLocaleString()}`;
+
+            const ticketPromedio = data.totalCitas > 0 ? (data.totalIngresos / data.totalCitas) : 0;
+            document.getElementById('ticketPromedio').textContent = `$${ticketPromedio.toFixed(2)}`;
+        }
+
+        function renderizarTabla(citas) {
+            const tbody = document.getElementById('tablaIngresos');
+            if (!citas || citas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay datos en el período seleccionado</td〉</tr>';
+                return;
+            }
+
+            tbody.innerHTML = citas.map(cita => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">${new Date(cita.fechaHoraInicio).toLocaleDateString()}</td>
+                    <td class="px-6 py-4">${escapeHtml(cita.clienteNombre)}</td>
+                    <td class="px-6 py-4">${escapeHtml(cita.artistaNombre)}</td>
+                    <td class="px-6 py-4">${cita.estudioNombre || '-'}</td>
+                    <td class="px-6 py-4 text-right font-medium">$${cita.precioTotal}</td>
+                    <td class="px-6 py-4 text-right text-green-600">$${cita.totalPagado}</td>
+                    <td class="px-6 py-4 text-right font-medium">$${cita.saldoPendiente}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderizarGrafico(ingresosPorMes) {
+            const ctx = document.getElementById('chartIngresos').getContext('2d');
+
+            if (chartIngresos) {
+                chartIngresos.destroy();
+            }
+
+            const meses = ingresosPorMes.map(m => `${m.nombreMes} ${m.año}`);
+            const valores = ingresosPorMes.map(m => m.total);
+
+            chartIngresos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Ingresos',
+                        data: valores,
+                        backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toLocaleString()}` } }
+                    },
+                    scales: {
+                        y: { ticks: { callback: (value) => `$${value}` } }
+                    }
+                }
+            });
+        }
+
+        function renderizarTopArtistas(artistas) {
+            const tbody = document.getElementById('tablaTopArtistas');
+            if (!artistas || artistas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-gray-500">No hay datos</td〉</tr>';
+                return;
+            }
+
+            tbody.innerHTML = artistas.map((artista, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold mr-3">
+                                ${index + 1}
+                            </div>
+                            <span class="font-medium">${escapeHtml(artista.artistaNombre)}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">${artista.cantidad} citas</td>
+                    <td class="px-6 py-4 text-right font-bold text-green-600">$${artista.total.toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        async function exportarExcel() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            const artistaId = document.getElementById('filtroArtista').value;
+            const estudioId = document.getElementById('filtroEstudio').value;
+
+            let url = `/api/reportes/exportar/ingresos?`;
+            if (fechaInicio) url += `fechaInicio=${fechaInicio}&`;
+            if (fechaFin) url += `fechaFin=${fechaFin}&`;
+            if (artistaId) url += `artistaId=${artistaId}&`;
+            if (estudioId) url += `estudioId=${estudioId}`;
+
+            window.location.href = url;
+        }
+
+        async function cargarArtistas() {
+            try {
+                const response = await fetch('/api/artistas');
+                const result = await response.json();
+                if (result.success) {
+                    const select = document.getElementById('filtroArtista');
+                    result.data.forEach(artista => {
+                        const option = document.createElement('option');
+                        option.value = artista.id;
+                        option.textContent = artista.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando artistas:', error);
+            }
+        }
+
+        async function cargarEstudios() {
+            try {
+                const response = await fetch('/api/estudios');
+                const result = await response.json();
+                if (result.success) {
+                    const select = document.getElementById('filtroEstudio');
+                    result.data.forEach(estudio => {
+                        const option = document.createElement('option');
+                        option.value = estudio.id;
+                        option.textContent = estudio.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando estudios:', error);
+            }
+        }
+
+        // Agregar endpoint de estudios si no existe
+        // En EstudiosController agregar:
+        // [HttpGet("/api/estudios")] public async Task<IActionResult> GetEstudios()
+
+        // Establecer fechas por defecto (mes actual)
+        const hoy = new Date();
+        const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+
+        document.getElementById('fechaInicio').value = primerDiaMes.toISOString().split('T')[0];
+        document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+
+        cargarArtistas();
+        cargarEstudios();
+        cargarReporte();
+    </script>
+}

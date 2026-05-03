@@ -172,7 +172,7 @@ namespace InkManager.Services.Implementations
             {
                 UsuarioId = dto.UsuarioId,
                 ArtistaReferenciaId = artistaId,
-                EstudioId = estudioId, // ← AGREGAR ESTUDIOID
+                EstudioId = estudioId, 
                 FechaHoraInicio = dto.FechaHoraInicio,
                 FechaHoraFin = dto.FechaHoraFin,
                 PrecioTotal = dto.PrecioTotal,
@@ -586,7 +586,99 @@ namespace InkManager.Services.Implementations
 
             return horasOcupadas.Distinct().OrderBy(h => h).ToList();
         }
+        public async Task<CitaDto?> UpdateAsync(int id, EditarCitaDto dto)
+        {
+            var cita = await _context.Citas
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
+                .Include(c => c.ZonaCuerpo)
+                .FirstOrDefaultAsync(c => c.Id == id && !c.EliminadoLogico);
 
+            if (cita == null) return null;
+
+            // Si cambia el horario, validar disponibilidad
+            if (dto.FechaHoraInicio.HasValue && dto.FechaHoraFin.HasValue)
+            {
+                var disponible = await ValidarDisponibilidadAsync(cita.ArtistaReferenciaId,
+                    dto.FechaHoraInicio.Value, dto.FechaHoraFin.Value, id);
+                if (!disponible)
+                    throw new InvalidOperationException("El artista no está disponible en ese horario");
+
+                cita.FechaHoraInicio = dto.FechaHoraInicio.Value;
+                cita.FechaHoraFin = dto.FechaHoraFin.Value;
+            }
+
+            // Actualizar campos
+            if (dto.PrecioTotal.HasValue) cita.PrecioTotal = dto.PrecioTotal.Value;
+            if (dto.Adelanto.HasValue) cita.Adelanto = dto.Adelanto.Value;
+            if (dto.ZonaCuerpoId.HasValue) cita.ZonaCuerpoId = dto.ZonaCuerpoId;
+            if (dto.TamanioCm.HasValue) cita.TamanioCm = dto.TamanioCm;
+            if (dto.NotasInternas != null) cita.NotasInternas = dto.NotasInternas;
+            if (dto.NotasPublicas != null) cita.NotasPublicas = dto.NotasPublicas;
+            if (dto.RequiereRecordatorio.HasValue) cita.RequiereRecordatorio = dto.RequiereRecordatorio.Value;
+
+            cita.FechaModificacion = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await RegistrarHistorialAsync(cita.Id, cita.Estado, cita.Estado, "sistema", 0, "Cita actualizada");
+
+            // Sincronizar con Google Calendar
+            await SincronizarGoogleCalendar(cita.Id);
+
+            return await GetByIdAsync(id);
+        }
+
+        public async Task<CitaDto?> ReprogramarAsync(int id, ReprogramarCitaDto dto)
+        {
+            var cita = await _context.Citas
+                .Include(c => c.Usuario)
+                .Include(c => c.ArtistaReferencia)
+                .FirstOrDefaultAsync(c => c.Id == id && !c.EliminadoLogico);
+
+            if (cita == null) return null;
+
+            // Validar disponibilidad
+            var disponible = await ValidarDisponibilidadAsync(cita.ArtistaReferenciaId,
+                dto.FechaHoraInicio, dto.FechaHoraFin, id);
+            if (!disponible)
+                throw new InvalidOperationException("El artista no está disponible en ese horario");
+
+            var fechaAnterior = cita.FechaHoraInicio;
+            var fechaAnteriorFin = cita.FechaHoraFin;
+
+            cita.FechaHoraInicio = dto.FechaHoraInicio;
+            cita.FechaHoraFin = dto.FechaHoraFin;
+            cita.FechaModificacion = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await RegistrarHistorialAsync(cita.Id, cita.Estado, cita.Estado, "sistema", 0,
+                $"Cita reprogramada de {fechaAnterior:dd/MM/yyyy HH:mm} a {dto.FechaHoraInicio:dd/MM/yyyy HH:mm}");
+
+            // Sincronizar con Google Calendar
+            await SincronizarGoogleCalendar(cita.Id);
+
+            return await GetByIdAsync(id);
+        }
+
+        private async Task SincronizarGoogleCalendar(int citaId)
+        {
+            try
+            {
+                var googleCalendarService = _httpContextAccessor.HttpContext?.RequestServices
+                    .GetRequiredService<IGoogleCalendarService>();
+
+                if (googleCalendarService != null)
+                {
+                    await googleCalendarService.SyncCitaConGoogleAsync(citaId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sincronizando con Google Calendar: {ex.Message}");
+            }
+        }
         // Métodos privados auxiliares
         private async Task RegistrarHistorialAsync(int citaId, string? estadoAnterior, string estadoNuevo, string usuarioTipo, int usuarioId, string? comentario = null)
         {

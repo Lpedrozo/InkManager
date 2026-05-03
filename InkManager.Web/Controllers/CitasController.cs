@@ -174,5 +174,53 @@ namespace InkManager.Web.Controllers
             var pagos = await _citaService.GetHistorialPagosAsync(id);
             return Ok(new { success = true, data = pagos });
         }
+        // PUT: /api/citas/{id}
+        [HttpPut("/api/citas/{id}")]
+        public async Task<IActionResult> UpdateCita(int id, [FromBody] EditarCitaDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+            }
+
+            try
+            {
+                var cita = await _citaService.UpdateAsync(id, dto);
+                if (cita == null)
+                    return NotFound(new { success = false, message = "Cita no encontrada" });
+
+                return Ok(new { success = true, message = "Cita actualizada exitosamente", data = cita });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error interno al actualizar la cita" });
+            }
+        }
+
+        // PATCH: /api/citas/{id}/reprogramar
+        [HttpPatch("/api/citas/{id}/reprogramar")]
+        public async Task<IActionResult> ReprogramarCita(int id, [FromBody] ReprogramarCitaDto dto)
+        {
+            try
+            {
+                var cita = await _citaService.ReprogramarAsync(id, dto);
+                if (cita == null)
+                    return NotFound(new { success = false, message = "Cita no encontrada" });
+
+                return Ok(new { success = true, message = "Cita reprogramada exitosamente", data = cita });
+            }
+            catch (InvalidOperationException ex)
+            {  
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error interno al reprogramar la cita" });
+            }
+        }
     }
 }

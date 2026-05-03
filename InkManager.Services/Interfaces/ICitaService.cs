@@ -7,6 +7,8 @@ namespace InkManager.Services.Interfaces
     public interface ICitaService
     {
         // CRUD Básico
+        Task<CitaDto?> UpdateAsync(int id, EditarCitaDto dto);
+        Task<CitaDto?> ReprogramarAsync(int id, ReprogramarCitaDto dto);
         Task<CitaDto?> GetByIdAsync(int id);
         Task<CitaDto> CreateAsync(CrearCitaDto dto);
         Task<CitaDto?> UpdateAsync(int id, ActualizarCitaDto dto);

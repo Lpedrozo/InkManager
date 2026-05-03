@@ -122,4 +122,22 @@ namespace InkManager.Core.DTOs
         public string? OrderBy { get; set; } = "FechaHoraInicio";
         public bool Descendente { get; set; } = true;
     }
+    public class EditarCitaDto
+    {
+        public DateTime? FechaHoraInicio { get; set; }
+        public DateTime? FechaHoraFin { get; set; }
+        public decimal? PrecioTotal { get; set; }
+        public decimal? Adelanto { get; set; }
+        public int? ZonaCuerpoId { get; set; }
+        public decimal? TamanioCm { get; set; }
+        public string? NotasInternas { get; set; }
+        public string? NotasPublicas { get; set; }
+        public bool? RequiereRecordatorio { get; set; }
+    }
+
+    public class ReprogramarCitaDto
+    {
+        public DateTime FechaHoraInicio { get; set; }
+        public DateTime FechaHoraFin { get; set; }
+    }
 }

@@ -254,7 +254,140 @@
         </div>
     </div>
 </div>
+<!-- MODAL EDITAR CITA -->
+<div id="modalEditar" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">✏️ Editar Cita</h2>
+                <button onclick="cerrarModalEditar()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
 
+        <div class="p-4 md:p-6">
+            <form id="formEditarCita" onsubmit="return false;">
+                <input type="hidden" id="editCitaId">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha *</label>
+                        <input type="date" id="editFechaCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Hora *</label>
+                        <input type="time" id="editHoraCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Duración</label>
+                        <select id="editDuracion" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                            <option value="1">1 hora</option>
+                            <option value="2">2 horas</option>
+                            <option value="3">3 horas</option>
+                            <option value="4">4 horas</option>
+                            <option value="5">5 horas</option>
+                            <option value="6">6 horas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Zona del Cuerpo</label>
+                        <select id="editZonaCuerpoId" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">Seleccionar zona</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Precio Total</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                            <input type="number" step="0.01" id="editPrecioTotal" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Adelanto</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                            <input type="number" step="0.01" id="editAdelanto" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Tamaño (cm)</label>
+                        <input type="number" step="0.1" id="editTamanioCm" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.0">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="editRequiereRecordatorio" class="rounded border-gray-300 text-purple-600" checked>
+                        <label class="ml-2 text-sm text-gray-700">Enviar recordatorio</label>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Notas Internas</label>
+                    <textarea id="editNotasInternas" rows="3" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
+                </div>
+            </form>
+        </div>
+
+        <div class="p-4 md:p-5 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
+            <button onclick="cerrarModalEditar()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">Cancelar</button>
+            <button onclick="guardarEdicion()" id="btnGuardarEdicion" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition flex items-center font-medium shadow-sm">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+<!-- MODAL REGISTRAR PAGO -->
+<div id="modalPago" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div class="p-4 border-b sticky top-0 bg-white rounded-t-xl">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">💰 Registrar Pago</h2>
+                <button onclick="cerrarModalPago()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="p-5">
+            <form id="formPago" onsubmit="return false;">
+                <input type="hidden" id="pagoCitaId">
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Monto *</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500">$</span>
+                        <input type="number" step="0.01" id="pagoMonto" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.00" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Método de Pago *</label>
+                    <select id="pagoMetodo" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                        <option value="efectivo">💵 Efectivo</option>
+                        <option value="tarjeta">💳 Tarjeta</option>
+                        <option value="transferencia">🏦 Transferencia</option>
+                        <option value="otro">📝 Otro</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Referencia (opcional)</label>
+                    <input type="text" id="pagoReferencia" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="N° de operación">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nota (opcional)</label>
+                    <textarea id="pagoNota" rows="2" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Comentario adicional..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="p-4 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
+            <button onclick="cerrarModalPago()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">Cancelar</button>
+            <button onclick="registrarPago()" id="btnRegistrarPago" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-medium">Registrar Pago</button>
+        </div>
+    </div>
+</div>
 <!-- MODAL DETALLE CITA -->
 <div id="modalDetalle" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -291,7 +424,61 @@
         let selectedZonaId = null;
         let currentCitaId = null;
         let clienteRapidoCallback = null;
+                let pagoCitaIdActual = null;
 
+        window.abrirModalPago = function(citaId) {
+            pagoCitaIdActual = citaId;
+            document.getElementById('pagoCitaId').value = citaId;
+            document.getElementById('formPago').reset();
+            document.getElementById('modalPago').classList.remove('hidden');
+            document.getElementById('modalPago').classList.add('flex');
+        };
+
+        window.cerrarModalPago = function() {
+            document.getElementById('modalPago').classList.add('hidden');
+            document.getElementById('modalPago').classList.remove('flex');
+            pagoCitaIdActual = null;
+        };
+
+        window.registrarPago = async function() {
+            const monto = parseFloat(document.getElementById('pagoMonto').value);
+            const metodoPago = document.getElementById('pagoMetodo').value;
+            const referencia = document.getElementById('pagoReferencia').value;
+            const nota = document.getElementById('pagoNota').value;
+
+            if (!monto || monto <= 0) {
+                showToast('Ingresa un monto válido', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnRegistrarPago');
+            btn.disabled = true;
+            btn.innerHTML = 'Registrando...';
+
+            try {
+                const response = await fetch(`/api/citas/${pagoCitaIdActual}/pagos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ monto, metodoPago, referenciaPago: referencia, nota })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Pago registrado exitosamente', 'success');
+                    cerrarModalPago();
+                    // Actualizar la vista de detalle
+                    await verDetalleCita(pagoCitaIdActual);
+                } else {
+                    showToast(result.message || 'Error al registrar pago', 'error');
+                }
+            } catch (error) {
+                showToast('Error de conexión', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Registrar Pago';
+            }
+        };
         // ============================================
         // Modal Cliente Rápido
         // ============================================
@@ -417,12 +604,34 @@
         function inicializarCalendario() {
             const calendarEl = document.getElementById('calendar');
             calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
+                initialView: 'timeGridWeek',
                 locale: 'es',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                views: {
+                    timeGridWeek: {
+                        titleFormat: { year: 'numeric', month: 'long', day: 'numeric' },
+                        columnHeaderFormat: { weekday: 'long' },
+                        slotMinTime: '08:00:00',
+                        slotMaxTime: '22:00:00',
+                        slotDuration: '00:30:00',
+                        businessHours: {
+                            daysOfWeek: [1, 2, 3, 4, 5],
+                            startTime: '09:00',
+                            endTime: '20:00'
+                        }
+                    },
+                    timeGridDay: {
+                        slotMinTime: '08:00:00',
+                        slotMaxTime: '22:00:00',
+                        slotDuration: '00:30:00'
+                    },
+                    dayGridMonth: {
+                        displayEventEnd: true
+                    }
                 },
                 events: async function(fetchInfo, successCallback) {
                     try {
@@ -435,20 +644,128 @@
                                 start: cita.fechaHoraInicio,
                                 end: cita.fechaHoraFin,
                                 backgroundColor: getColorPorEstado(cita.estado),
-                                borderColor: getColorPorEstado(cita.estado)
+                                borderColor: getColorPorEstado(cita.estado),
+                                extendedProps: {
+                                    estado: cita.estado,
+                                    cliente: cita.clienteNombre,
+                                    telefono: cita.clienteTelefono,
+                                    zona: cita.zonaCuerpo
+                                }
                             }));
                             successCallback(eventos);
                         } else successCallback([]);
                     } catch (error) { successCallback([]); }
                 },
-                eventClick: function(info) { verDetalleCita(info.event.id); },
+                eventClick: function(info) {
+                    verDetalleCita(info.event.id);
+                },
+                eventDidMount: function(info) {
+                    // Tooltip nativo sin Bootstrap
+                    if (info.event.extendedProps.cliente) {
+                        info.el.setAttribute('title', `${info.event.extendedProps.cliente}\n📞 ${info.event.extendedProps.telefono || 'Sin teléfono'}\n📍 ${info.event.extendedProps.zona || 'Sin zona'}`);
+                    }
+                },
                 height: 'auto',
-                responsive: true
+                slotLabelFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                },
+                allDaySlot: false,
+                nowIndicator: true,
+                editable: true,
+                droppable: true,
+                eventDurationEditable: true,
+                eventStartEditable: true,
+                eventResizableFromStart: true,
+                eventDrop: async function(info) {
+                    const citaId = info.event.id;
+                    const nuevaFechaInicio = info.event.start;
+                    const nuevaFechaFin = info.event.end;
+
+                    const result = await Swal.fire({
+                        title: '¿Reprogramar cita?',
+                        text: `¿Deseas mover esta cita al ${nuevaFechaInicio.toLocaleDateString()} ${nuevaFechaInicio.toLocaleTimeString()}`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, reprogramar',
+                        cancelButtonText: 'Cancelar'
+                    });
+
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/citas/${citaId}/reprogramar`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    fechaHoraInicio: nuevaFechaInicio.toISOString(),
+                                    fechaHoraFin: nuevaFechaFin.toISOString()
+                                })
+                            });
+
+                            const responseData = await response.json();
+
+                            if (responseData.success) {
+                                showToast('Cita reprogramada exitosamente', 'success');
+                                calendar.refetchEvents();
+                                cargarProximasCitas();
+                            } else {
+                                showToast(responseData.message || 'Error al reprogramar', 'error');
+                                info.revert();
+                            }
+                        } catch (error) {
+                            showToast('Error de conexión', 'error');
+                            info.revert();
+                        }
+                    } else {
+                        info.revert();
+                    }
+                },
+                eventResize: async function(info) {
+                    const citaId = info.event.id;
+                    const nuevaFechaInicio = info.event.start;
+                    const nuevaFechaFin = info.event.end;
+
+                    const result = await Swal.fire({
+                        title: '¿Cambiar duración?',
+                        text: `¿Deseas cambiar la duración de esta cita?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, cambiar',
+                        cancelButtonText: 'Cancelar'
+                    });
+
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`/api/citas/${citaId}/reprogramar`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    fechaHoraInicio: nuevaFechaInicio.toISOString(),
+                                    fechaHoraFin: nuevaFechaFin.toISOString()
+                                })
+                            });
+
+                            const responseData = await response.json();
+
+                            if (responseData.success) {
+                                showToast('Duración actualizada', 'success');
+                                calendar.refetchEvents();
+                            } else {
+                                showToast(responseData.message || 'Error al cambiar duración', 'error');
+                                info.revert();
+                            }
+                        } catch (error) {
+                            showToast('Error de conexión', 'error');
+                            info.revert();
+                        }
+                    } else {
+                        info.revert();
+                    }
+                }
             });
             calendar.render();
-        }
-
-        function getColorPorEstado(estado) {
+        }        function getColorPorEstado(estado) {
             const colores = { 'pendiente': '#F59E0B', 'confirmada': '#3B82F6', 'en_curso': '#8B5CF6', 'completada': '#10B981', 'cancelada': '#EF4444' };
             return colores[estado] || '#6B7280';
         }
@@ -677,45 +994,86 @@
                         `;
                     }
 
-                    content.innerHTML = `
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Cliente</p>
-                                    <p class="font-semibold">${escapeHtml(cita.clienteNombre)}</p>
-                                    <p class="text-sm text-gray-600">${cita.clienteEmail || ''}</p>
-                                    <p class="text-sm text-gray-600">${cita.clienteTelefono || ''}</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Artista</p>
-                                    <p class="font-semibold">${escapeHtml(cita.artistaNombre)}</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Fecha y Hora</p>
-                                    <p class="font-semibold">${fechaInicio.toLocaleDateString('es-ES')}</p>
-                                    <p class="text-sm">${fechaInicio.toLocaleTimeString('es-ES')} - ${fechaFin.toLocaleTimeString('es-ES')}</p>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Estado</p>
-                                    <span class="px-2 py-1 text-xs rounded-full ${getEstadoClase(cita.estado)}">${getEstadoTexto(cita.estado)}</span>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Zona del Cuerpo</p>
-                                    <p class="font-semibold">${cita.zonaCuerpo || 'No especificada'}</p>
-                                    ${cita.tamanioCm ? `<p class="text-sm text-gray-600">📏 ${cita.tamanioCm} cm</p>` : ''}
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <p class="text-xs text-gray-500">Precio</p>
-                                    <p class="font-semibold text-green-600">$${cita.precioTotal}</p>
-                                    <p class="text-sm text-gray-500">Adelanto: $${cita.adelanto}</p>
-                                    <p class="text-sm font-medium">Saldo: $${cita.saldoPendiente}</p>
-                                </div>
-                            </div>
-                            ${imagenHtml}
-                            ${cita.notasInternas ? `<div class="bg-gray-50 p-3 rounded-lg"><p class="text-xs text-gray-500">Notas Internas</p><p class="text-sm">${escapeHtml(cita.notasInternas)}</p></div>` : ''}
-                        </div>
-                    `;
+        content.innerHTML = `
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Cliente</p>
+                        <p class="font-semibold">${escapeHtml(cita.clienteNombre)}</p>
+                        <p class="text-sm text-gray-600">${cita.clienteEmail || ''}</p>
+                        <p class="text-sm text-gray-600">${cita.clienteTelefono || ''}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Artista</p>
+                        <p class="font-semibold">${escapeHtml(cita.artistaNombre)}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Fecha y Hora</p>
+                        <p class="font-semibold">${fechaInicio.toLocaleDateString('es-ES')}</p>
+                        <p class="text-sm">${fechaInicio.toLocaleTimeString('es-ES')} - ${fechaFin.toLocaleTimeString('es-ES')}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Estado</p>
+                        <span class="px-2 py-1 text-xs rounded-full ${getEstadoClase(cita.estado)}">${getEstadoTexto(cita.estado)}</span>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Zona del Cuerpo</p>
+                        <p class="font-semibold">${cita.zonaCuerpo || 'No especificada'}</p>
+                        ${cita.tamanioCm ? `<p class="text-sm text-gray-600">📏 ${cita.tamanioCm} cm</p>` : ''}
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-xs text-gray-500">Precio</p>
+                        <p class="font-semibold text-green-600">$${cita.precioTotal}</p>
+                        <p class="text-sm text-gray-500">Adelanto: $${cita.adelanto}</p>
+                        <p class="text-sm font-medium">Saldo: $${cita.saldoPendiente}</p>
+                    </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+            <div class="flex justify-between items-center mb-3">
+                <p class="text-xs text-gray-500 font-semibold">💰 Pagos Registrados</p>
+                <button onclick="abrirModalPago(${cita.id})" class="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded">
+                    + Registrar Pago
+                </button>
+            </div>
+            <div id="listaPagos_${cita.id}" class="space-y-2">
+                <p class="text-sm text-gray-500 text-center">Cargando pagos...</p>
+            </div>
+        </div>
 
+        // También agrega el resumen financiero actualizado:
+        <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-xs text-gray-500">Resumen Financiero</p>
+            <div class="mt-2 space-y-1">
+                <div class="flex justify-between">
+                    <span class="text-sm">Precio Total:</span>
+                    <span class="font-semibold">$${cita.precioTotal}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm">Adelanto:</span>
+                    <span class="text-green-600">-$${cita.adelanto}</span>
+                </div>
+                <div id="totalPagado_${cita.id}" class="flex justify-between">
+                    <span class="text-sm">Pagado:</span>
+                    <span class="text-green-600">$${cita.totalPagado || 0}</span>
+                </div>
+                <div class="flex justify-between border-t pt-1 mt-1">
+                    <span class="text-sm font-semibold">Saldo Pendiente:</span>
+                    <span class="font-bold text-blue-600" id="saldoPendiente_${cita.id}">$${cita.saldoPendiente}</span>
+                </div>
+            </div>
+        </div>
+                </div>
+                ${imagenHtml}
+                ${cita.notasInternas ? `<div class="bg-gray-50 p-3 rounded-lg"><p class="text-xs text-gray-500">Notas Internas</p><p class="text-sm">${escapeHtml(cita.notasInternas)}</p></div>` : ''}
+
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button onclick="cerrarModalDetalle()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition font-medium">Cerrar</button>
+                    <button onclick="abrirModalEditar(${cita.id}); cerrarModalDetalle();" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition font-medium">
+                        ✏️ Editar Cita
+                    </button>
+                    <button id="btnCambiarEstado" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium hidden">Cambiar Estado</button>
+                </div>
+            </div>
+        `;
                     if (!['completada', 'cancelada'].includes(cita.estado)) {
                         const btn = document.getElementById('btnCambiarEstado');
                         btn.classList.remove('hidden');
@@ -793,7 +1151,50 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         };
+                async function cargarPagos(citaId) {
+            try {
+                const response = await fetch(`/api/citas/${citaId}/pagos`);
+                const result = await response.json();
 
+                if (result.success && result.data.length > 0) {
+                    const container = document.getElementById(`listaPagos_${citaId}`);
+                    if (container) {
+                        container.innerHTML = result.data.map(pago => `
+                            <div class="flex justify-between items-center p-2 bg-white rounded border">
+                                <div>
+                                    <p class="font-medium text-green-600">+$${pago.monto}</p>
+                                    <p class="text-xs text-gray-500">${new Date(pago.fechaPago).toLocaleDateString()}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm">${pago.metodoPagoDisplay}</p>
+                                    ${pago.referenciaPago ? `<p class="text-xs text-gray-500">Ref: ${pago.referenciaPago}</p>` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    // Actualizar total pagado y saldo
+                    const totalPagado = result.data.reduce((sum, p) => sum + p.monto, 0);
+                    const citaResponse = await fetch(`/api/citas/${citaId}`);
+                    const citaResult = await citaResponse.json();s
+
+                    if (citaResult.success) {
+                        const saldo = citaResult.data.precioTotal - citaResult.data.adelanto - totalPagado;
+                        const totalPagadoSpan = document.getElementById(`totalPagado_${citaId}`);
+                        const saldoSpan = document.getElementById(`saldoPendiente_${citaId}`);
+                        if (totalPagadoSpan) totalPagadoSpan.innerHTML = `<span class="text-green-600">$${totalPagado + citaResult.data.adelanto}</span>`;
+                        if (saldoSpan) saldoSpan.textContent = `$${saldo}`;
+                    }
+                } else {
+                    const container = document.getElementById(`listaPagos_${citaId}`);
+                    if (container) {
+                        container.innerHTML = '<p class="text-sm text-gray-500 text-center">No hay pagos registrados</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando pagos:', error);
+            }
+        }
         window.guardarCita = async function() {
             const clienteId = document.getElementById('clienteId').value;
             const artistaId = document.getElementById('artistaId').value;
@@ -909,7 +1310,127 @@
                 reader.readAsDataURL(file);
             }
         });
+                // Cargar zonas para el selector de edición
+        async function cargarZonasParaEdicion() {
+            try {
+                const response = await fetch('/api/zonas-cuerpo');
+                const result = await response.json();
+                if (result.success && result.data.length > 0) {
+                    const select = document.getElementById('editZonaCuerpoId');
+                    result.data.forEach(zona => {
+                        const option = document.createElement('option');
+                        option.value = zona.id;
+                        option.textContent = zona.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando zonas:', error);
+            }
+        }
 
+        // Abrir modal de edición
+        window.abrirModalEditar = async function(id) {
+            try {
+                const response = await fetch(`/api/citas/${id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const cita = result.data;
+                    const fechaInicio = new Date(cita.fechaHoraInicio);
+                    const fechaFin = new Date(cita.fechaHoraFin);
+                    const duracion = (fechaFin - fechaInicio) / (60 * 60 * 1000);
+
+                    document.getElementById('editCitaId').value = cita.id;
+                    document.getElementById('editFechaCita').value = fechaInicio.toISOString().split('T')[0];
+                    document.getElementById('editHoraCita').value = fechaInicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    document.getElementById('editDuracion').value = duracion;
+                    document.getElementById('editPrecioTotal').value = cita.precioTotal;
+                    document.getElementById('editAdelanto').value = cita.adelanto;
+                    document.getElementById('editTamanioCm').value = cita.tamanioCm || '';
+                    document.getElementById('editZonaCuerpoId').value = cita.zonaCuerpoId || '';
+                    document.getElementById('editNotasInternas').value = cita.notasInternas || '';
+                    document.getElementById('editRequiereRecordatorio').checked = cita.requiereRecordatorio;
+
+                    document.getElementById('modalEditar').classList.remove('hidden');
+                    document.getElementById('modalEditar').classList.add('flex');
+                }
+            } catch (error) {
+                showToast('Error al cargar los datos de la cita', 'error');
+            }
+        };
+
+        window.cerrarModalEditar = function() {
+            document.getElementById('modalEditar').classList.add('hidden');
+            document.getElementById('modalEditar').classList.remove('flex');
+        };
+
+        window.guardarEdicion = async function() {
+            const id = document.getElementById('editCitaId').value;
+            const fecha = document.getElementById('editFechaCita').value;
+            const horaInicio = document.getElementById('editHoraCita').value;
+            const duracion = parseInt(document.getElementById('editDuracion').value);
+
+            if (!fecha || !horaInicio) {
+                showToast('Selecciona fecha y hora', 'error');
+                return;
+            }
+
+            const fechaSeleccionada = new Date(fecha);
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            if (fechaSeleccionada < hoy) {
+                showToast('No se pueden reprogramar citas en fechas pasadas', 'error');
+                return;
+            }
+
+            const fechaHoraInicio = new Date(`${fecha}T${horaInicio}`);
+            const fechaHoraFin = new Date(fechaHoraInicio.getTime() + duracion * 60 * 60 * 1000);
+
+            const data = {
+                fechaHoraInicio: fechaHoraInicio.toISOString(),
+                fechaHoraFin: fechaHoraFin.toISOString(),
+                precioTotal: parseFloat(document.getElementById('editPrecioTotal').value) || 0,
+                adelanto: parseFloat(document.getElementById('editAdelanto').value) || 0,
+                tamanioCm: parseFloat(document.getElementById('editTamanioCm').value) || null,
+                zonaCuerpoId: parseInt(document.getElementById('editZonaCuerpoId').value) || null,
+                notasInternas: document.getElementById('editNotasInternas').value,
+                requiereRecordatorio: document.getElementById('editRequiereRecordatorio').checked
+            };
+
+            const btn = document.getElementById('btnGuardarEdicion');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Guardando...';
+
+            try {
+                const response = await fetch(`/api/citas/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Cita actualizada exitosamente', 'success');
+                    cerrarModalEditar();
+                    if (calendar) calendar.refetchEvents();
+                    cargarProximasCitas();
+                    if (currentCitaId === id) verDetalleCita(id);
+                } else {
+                    showToast(result.message || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                showToast('Error de conexión', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Guardar Cambios';
+            }
+        };
+
+        // Cargar zonas al iniciar
+        cargarZonasParaEdicion();
         function limpiarImagen() {
             document.getElementById('fotoReferencia').value = '';
             document.getElementById('previewImagen').classList.add('hidden');
