@@ -80,5 +80,40 @@ namespace InkManager.Web.Controllers
 
             return Redirect(url);
         }
+
+        [HttpGet("calendario/desconectar")]
+        public async Task<IActionResult> DesconectarCalendar()
+        {
+            var usuarioId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+
+            var calendario = await _context.Calendarios
+                .FirstOrDefaultAsync(c => c.Tipo == "artista" && c.EntidadId == usuarioId && !c.EliminadoLogico);
+
+            if (calendario == null)
+            {
+                TempData["Error"] = "No se encontró un calendario vinculado.";
+                return RedirectToAction("Index");
+            }
+
+            try
+            {
+                calendario.AccessToken = null;
+                calendario.RefreshToken = null;
+                calendario.TokenExpiry = null;
+                calendario.IsSynced = false;
+                calendario.LastSync = null;
+                calendario.GoogleCalendarId = null;
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "Calendario desconectado exitosamente.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error al desconectar el calendario: {ex.Message}";
+            }
+
+            return RedirectToAction("Index");
+        }
     }
 }
