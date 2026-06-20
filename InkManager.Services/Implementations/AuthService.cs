@@ -244,8 +244,17 @@ namespace InkManager.Services.Implementations
 
                 if (asistente == null)
                     throw new Exception("Artista no válido para este asistente");
-
+                var claimArtistaIdExistente = claims.FirstOrDefault(c => c.Type == "ArtistaId");
+                if (claimArtistaIdExistente != null)
+                {
+                    claims.Remove(claimArtistaIdExistente);
+                }
                 claims.Add(new Claim("ArtistaId", dto.ArtistaId.Value.ToString()));
+                var claimArtistaNombreExistente = claims.FirstOrDefault(c => c.Type == "ArtistaNombre");
+                if (claimArtistaNombreExistente != null)
+                {
+                    claims.Remove(claimArtistaNombreExistente);
+                }
                 claims.Add(new Claim("ArtistaNombre", asistente.ArtistaAsistido.Nombre));
                 claims.Add(new Claim("EstudioId", asistente.EstudioId.ToString()));
                 claims.Add(new Claim("EstudioNombre", asistente.Estudio?.Nombre ?? ""));

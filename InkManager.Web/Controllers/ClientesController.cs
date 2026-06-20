@@ -15,10 +15,18 @@ namespace InkManager.Web.Controllers
         {
             _clienteService = clienteService;
         }
+        private int GetArtistaIdActual()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 
-        // ============================================
-        // VISTAS
-        // ============================================
+            if (rol == "artista")
+                return int.Parse(userId ?? "0");
+
+            // Si es asistente, obtener el artista al que asiste
+            var artistaId = User.FindFirst("ArtistaId")?.Value;
+            return artistaId != null ? int.Parse(artistaId) : 0;
+        }
 
         // GET: /clientes
         [HttpGet("/clientes")]
@@ -27,15 +35,11 @@ namespace InkManager.Web.Controllers
             return View("~/Views/Clientes/Index.cshtml");
         }
 
-        // ============================================
-        // API ENDPOINTS
-        // ============================================
-
         // GET: /api/clientes
         [HttpGet("/api/clientes")]
-        public async Task<IActionResult> GetAll(int pagina = 1, int pageSize = 10, string? search = null)
+        public async Task<IActionResult> GetAll(int pagina = 1, int pageSize = 10, string? search = null, string? estado = null)
         {
-            var result = await _clienteService.GetAllAsync(pagina, pageSize, search);
+            var result = await _clienteService.GetAllAsync(pagina, pageSize, search, estado);
             return Ok(new { success = true, data = result });
         }
 
@@ -182,6 +186,73 @@ namespace InkManager.Web.Controllers
             var fechaStr = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
             return File(bytes, "text/vcard", $"clientes_contactos_{fechaStr}.vcf");
+        }
+        // GET: /api/clientes/exportar-todos-vcf
+        [HttpGet("/api/clientes/exportar-todos-vcf")]
+        public async Task<IActionResult> ExportarTodosClientesVCF()
+        {
+            var artistaId = GetArtistaIdActual(); // Necesitas este método o usar el contexto del usuario
+
+            // Obtener todos los clientes del artista actual
+            var clientes = await _clienteService.GetAllAsync(1, 9999, null);
+
+            var vcf = new System.Text.StringBuilder();
+
+            foreach (var cliente in clientes.Items)
+            {
+                vcf.AppendLine("BEGIN:VCARD");
+                vcf.AppendLine("VERSION:3.0");
+                vcf.AppendLine($"FN:{cliente.Nombre}");
+                vcf.AppendLine($"N:{cliente.Nombre};;;");
+                vcf.AppendLine($"TEL:{cliente.Telefono}");
+                if (!string.IsNullOrEmpty(cliente.Email))
+                    vcf.AppendLine($"EMAIL:{cliente.Email}");
+                vcf.AppendLine($"NOTE:Cliente desde {cliente.FechaRegistro:yyyy-MM-dd} | ${cliente.TotalGastado:F2} gastado | {cliente.TotalCitas} citas");
+                vcf.AppendLine("END:VCARD");
+                vcf.AppendLine();
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(vcf.ToString());
+            var fechaStr = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+            return File(bytes, "text/vcard", $"todos_mis_clientes_{fechaStr}.vcf");
+        }
+
+        // POST: /api/clientes/exportar-seleccionados-vcf
+        [HttpPost("/api/clientes/exportar-seleccionados-vcf")]
+        public async Task<IActionResult> ExportarSeleccionadosVCF([FromBody] List<int> ids)
+        {
+            if (ids == null || !ids.Any())
+                return BadRequest(new { success = false, message = "No se seleccionaron clientes" });
+
+            var clientes = new List<ClienteDto>();
+            foreach (var id in ids)
+            {
+                var cliente = await _clienteService.GetByIdAsync(id);
+                if (cliente != null)
+                    clientes.Add(cliente);
+            }
+
+            var vcf = new System.Text.StringBuilder();
+
+            foreach (var cliente in clientes)
+            {
+                vcf.AppendLine("BEGIN:VCARD");
+                vcf.AppendLine("VERSION:3.0");
+                vcf.AppendLine($"FN:{cliente.Nombre}");
+                vcf.AppendLine($"N:{cliente.Nombre};;;");
+                vcf.AppendLine($"TEL:{cliente.Telefono}");
+                if (!string.IsNullOrEmpty(cliente.Email))
+                    vcf.AppendLine($"EMAIL:{cliente.Email}");
+                vcf.AppendLine($"NOTE:Cliente desde {cliente.FechaRegistro:yyyy-MM-dd} | ${cliente.TotalGastado:F2} gastado | {cliente.TotalCitas} citas");
+                vcf.AppendLine("END:VCARD");
+                vcf.AppendLine();
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(vcf.ToString());
+            var fechaStr = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+            return File(bytes, "text/vcard", $"clientes_seleccionados_{fechaStr}.vcf");
         }
         private string EscapeCsv(string text)
         {

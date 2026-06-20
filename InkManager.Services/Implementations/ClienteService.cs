@@ -48,7 +48,6 @@ namespace InkManager.Services.Implementations
             var artistaId = GetArtistaIdActual();
             if (artistaId == 0) return null;
 
-            // Buscar cliente que esté asociado al artista actual
             var clienteArtista = await _context.ClientesArtistas
                 .Include(ca => ca.Cliente)
                     .ThenInclude(c => c.UsuarioRoles)
@@ -58,9 +57,23 @@ namespace InkManager.Services.Implementations
 
             if (clienteArtista == null) return null;
 
-            return MapToDto(clienteArtista.Cliente, clienteArtista);
-        }
+            var usuario = clienteArtista.Cliente;
 
+            return new ClienteDto
+            {
+                Id = usuario.Id,
+                Nombre = usuario.Nombre,
+                Email = usuario.Email,
+                Telefono = usuario.Telefono,
+                FotoPerfilUrl = usuario.FotoPerfilUrl,
+                FechaRegistro = clienteArtista.FechaAsociacion,
+                EstadoCliente = clienteArtista.EstadoCliente ?? "activo", 
+                ProximoContacto = clienteArtista.ProximoContacto,
+                NotaSeguimiento = clienteArtista.NotaSeguimiento,  
+                TotalCitas = usuario.CitasComoCliente?.Count ?? 0,
+                TotalGastado = usuario.CitasComoCliente?.Where(c => c.Estado == "completada").Sum(c => c.PrecioTotal) ?? 0
+            };
+        }
         public async Task<ClienteDto?> GetByTelefonoAsync(string telefono)
         {
             var artistaId = GetArtistaIdActual();
@@ -83,7 +96,6 @@ namespace InkManager.Services.Implementations
             var artistaId = GetArtistaIdActual();
             if (artistaId == 0) throw new InvalidOperationException("No se pudo identificar al artista");
 
-            // Verificar si ya existe por teléfono
             var existing = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Telefono == dto.Telefono && !u.EliminadoLogico);
 
@@ -92,7 +104,6 @@ namespace InkManager.Services.Implementations
 
             if (existing != null)
             {
-                // El cliente ya existe, verificar si ya está asociado a este artista
                 usuario = existing;
                 var yaAsociado = await _context.ClientesArtistas
                     .AnyAsync(ca => ca.ClienteId == usuario.Id && ca.ArtistaId == artistaId);
@@ -103,7 +114,6 @@ namespace InkManager.Services.Implementations
             else
             {
                 esNuevoCliente = true;
-                // Contraseña genérica: "Cliente123!"
                 var passwordGenerica = "Cliente123!";
 
                 usuario = new Usuario
@@ -120,7 +130,6 @@ namespace InkManager.Services.Implementations
                 _context.Usuarios.Add(usuario);
                 await _context.SaveChangesAsync();
 
-                // Asignar rol de cliente
                 var rolCliente = await _context.Roles.FirstOrDefaultAsync(r => r.Nombre == "cliente");
                 if (rolCliente != null)
                 {
@@ -133,21 +142,30 @@ namespace InkManager.Services.Implementations
                 }
             }
 
-            // Asociar cliente al artista
+            var estadoCliente = string.IsNullOrEmpty(dto.EstadoCliente) ? "activo" : dto.EstadoCliente;
+
             var clienteArtista = new ClienteArtista
             {
                 ClienteId = usuario.Id,
                 ArtistaId = artistaId,
                 EstudioId = GetEstudioIdActual(),
                 Notas = dto.Notas,
-                FechaAsociacion = DateTime.UtcNow
+                FechaAsociacion = DateTime.UtcNow,
+                EstadoCliente = estadoCliente,
+                ProximoContacto = dto.ProximoContacto,
+                NotaSeguimiento = dto.NotaSeguimiento
             };
+
+            if ((estadoCliente == "seguimiento" || estadoCliente == "asesoria") && !dto.ProximoContacto.HasValue)
+            {
+                clienteArtista.ProximoContacto = DateTime.UtcNow.AddDays(7);
+            }
+
             _context.ClientesArtistas.Add(clienteArtista);
             await _context.SaveChangesAsync();
 
             return (await GetByIdAsync(usuario.Id))!;
         }
-
         private int GetEstudioIdActual()
         {
             var user = _httpContextAccessor.HttpContext?.User;
@@ -188,12 +206,33 @@ namespace InkManager.Services.Implementations
             if (dto.FotoPerfilUrl != null)
                 usuario.FotoPerfilUrl = dto.FotoPerfilUrl;
 
+            if (!string.IsNullOrEmpty(dto.EstadoCliente))
+            {
+                clienteArtista.EstadoCliente = dto.EstadoCliente;
+
+                if ((dto.EstadoCliente == "seguimiento" || dto.EstadoCliente == "asesoria")
+                    && !dto.ProximoContacto.HasValue && !clienteArtista.ProximoContacto.HasValue)
+                {
+                    clienteArtista.ProximoContacto = DateTime.UtcNow.AddDays(7);
+                }
+            }
+
+            if (dto.ProximoContacto.HasValue)
+                clienteArtista.ProximoContacto = dto.ProximoContacto;
+
+            if (dto.NotaSeguimiento != null)
+                clienteArtista.NotaSeguimiento = dto.NotaSeguimiento;
+
+            if (!string.IsNullOrEmpty(dto.EstadoCliente) || dto.NotaSeguimiento != null)
+            {
+                clienteArtista.UltimoContacto = DateTime.UtcNow;
+            }
+
             usuario.FechaModificacion = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
             return await GetByIdAsync(id);
         }
-
         public async Task<bool> DeleteAsync(int id)
         {
             var artistaId = GetArtistaIdActual();
@@ -217,7 +256,7 @@ namespace InkManager.Services.Implementations
             return true;
         }
 
-        public async Task<PagedResult<ClienteDto>> GetAllAsync(int pagina = 1, int pageSize = 10, string? search = null)
+        public async Task<PagedResult<ClienteDto>> GetAllAsync(int pagina = 1, int pageSize = 10, string? search = null, string? estado = null)
         {
             try
             {
@@ -235,22 +274,30 @@ namespace InkManager.Services.Implementations
                     };
                 }
 
-                // Consulta más simple sin ThenInclude
+                // ✅ Incluir ClienteArtista para tener acceso al estado
                 var query = _context.ClientesArtistas
-                    .Where(ca => ca.ArtistaId == artistaId)
-                    .Select(ca => ca.Cliente);
+                    .Include(ca => ca.Cliente)
+                    .Where(ca => ca.ArtistaId == artistaId);
 
+                // ✅ Filtrar por estado si se proporciona
+                if (!string.IsNullOrEmpty(estado))
+                {
+                    query = query.Where(ca => ca.EstadoCliente == estado);
+                }
+
+                // ✅ Filtrar por búsqueda
                 if (!string.IsNullOrEmpty(search))
                 {
-                    query = query.Where(u => u.Nombre.Contains(search) ||
-                                             u.Telefono.Contains(search) ||
-                                             (u.Email != null && u.Email.Contains(search)));
+                    query = query.Where(ca =>
+                        ca.Cliente.Nombre.Contains(search) ||
+                        ca.Cliente.Telefono.Contains(search) ||
+                        (ca.Cliente.Email != null && ca.Cliente.Email.Contains(search)));
                 }
 
                 var totalCount = await query.CountAsync();
                 Console.WriteLine($"GetAllAsync - totalCount: {totalCount}");
 
-                // Simplificar el ordenamiento y paginación
+                // ✅ Obtener los items con paginación
                 var items = await query
                     .Skip((pagina - 1) * pageSize)
                     .Take(pageSize)
@@ -258,9 +305,11 @@ namespace InkManager.Services.Implementations
 
                 Console.WriteLine($"GetAllAsync - items obtenidos: {items.Count}");
 
+                // ✅ Mapear incluyendo el estado
                 var clientesDto = new List<ClienteDto>();
-                foreach (var usuario in items)
+                foreach (var clienteArtista in items)
                 {
+                    var usuario = clienteArtista.Cliente;
                     clientesDto.Add(new ClienteDto
                     {
                         Id = usuario.Id,
@@ -268,9 +317,12 @@ namespace InkManager.Services.Implementations
                         Email = usuario.Email,
                         Telefono = usuario.Telefono,
                         FotoPerfilUrl = usuario.FotoPerfilUrl,
-                        FechaRegistro = usuario.FechaCreacion,
-                        TotalCitas = await _context.Citas.CountAsync(c => c.UsuarioId == usuario.Id && c.Estado == "completada"),
-                        TotalGastado = await _context.Citas.Where(c => c.UsuarioId == usuario.Id && c.Estado == "completada").SumAsync(c => c.PrecioTotal)
+                        FechaRegistro = clienteArtista.FechaAsociacion,  // ✅ Usar fecha de asociación
+                        EstadoCliente = clienteArtista.EstadoCliente,    // ✅ Incluir estado
+                        ProximoContacto = clienteArtista.ProximoContacto, // ✅ Incluir próximo contacto
+                        NotaSeguimiento = clienteArtista.NotaSeguimiento, // ✅ Incluir nota
+                        TotalCitas = await _context.Citas.CountAsync(c => c.UsuarioId == usuario.Id && c.ArtistaReferenciaId == artistaId && c.Estado == "completada"),
+                        TotalGastado = await _context.Citas.Where(c => c.UsuarioId == usuario.Id && c.ArtistaReferenciaId == artistaId && c.Estado == "completada").SumAsync(c => c.PrecioTotal)
                     });
                 }
 
@@ -289,7 +341,6 @@ namespace InkManager.Services.Implementations
                 throw;
             }
         }
-
         public async Task<int> GetTotalClientesAsync()
         {
             var artistaId = GetArtistaIdActual();
@@ -349,6 +400,38 @@ namespace InkManager.Services.Implementations
                 TotalCitas = usuario.CitasComoCliente?.Count ?? 0,
                 TotalGastado = usuario.CitasComoCliente?.Where(c => c.Estado == "completada").Sum(c => c.PrecioTotal) ?? 0
             };
+        }
+        public async Task<ClienteDto?> ActualizarEstadoAsync(int clienteId, ActualizarEstadoClienteDto dto)
+        {
+            var artistaId = GetArtistaIdActual();
+            if (artistaId == 0) return null;
+
+            var clienteArtista = await _context.ClientesArtistas
+                .FirstOrDefaultAsync(ca => ca.ClienteId == clienteId && ca.ArtistaId == artistaId);
+
+            if (clienteArtista == null) return null;
+
+            clienteArtista.EstadoCliente = dto.EstadoCliente;
+            clienteArtista.ProximoContacto = dto.ProximoContacto;
+            clienteArtista.NotaSeguimiento = dto.NotaSeguimiento;
+            clienteArtista.UltimoContacto = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return await GetByIdAsync(clienteId);
+        }
+        public async Task<List<ClienteDto>> GetClientesPorEstadoAsync(string estado)
+        {
+            var artistaId = GetArtistaIdActual();
+            if (artistaId == 0) return new List<ClienteDto>();
+
+            var clientes = await _context.ClientesArtistas
+                .Include(ca => ca.Cliente)
+                .Where(ca => ca.ArtistaId == artistaId && ca.EstadoCliente == estado)
+                .Select(ca => ca.Cliente)
+                .ToListAsync();
+
+            return clientes.Select(c => MapToDto(c, null)).ToList();
         }
     }
 }

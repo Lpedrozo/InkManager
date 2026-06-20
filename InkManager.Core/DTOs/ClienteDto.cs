@@ -12,6 +12,10 @@ namespace InkManager.Core.DTOs
         public DateTime FechaRegistro { get; set; }
         public int TotalCitas { get; set; }
         public decimal TotalGastado { get; set; }
+        public string? EstadoCliente { get; set; }
+        public DateTime? UltimoContacto { get; set; }
+        public DateTime? ProximoContacto { get; set; }
+        public string? NotaSeguimiento { get; set; }
     }
 
     public class CrearClienteDto
@@ -31,7 +35,10 @@ namespace InkManager.Core.DTOs
 
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public string? Password { get; set; }  
-        public string? Notas { get; set; } 
+        public string? Notas { get; set; }
+        public string? EstadoCliente { get; set; }  
+        public DateTime? ProximoContacto { get; set; } 
+        public string? NotaSeguimiento { get; set; }
     }
 
     public class ActualizarClienteDto
@@ -40,11 +47,22 @@ namespace InkManager.Core.DTOs
         public string? Email { get; set; }
         public string? Telefono { get; set; }
         public string? FotoPerfilUrl { get; set; }
+        public string? EstadoCliente { get; set; } 
+        public DateTime? ProximoContacto { get; set; }
+        public string? NotaSeguimiento { get; set; } 
     }
     public class CrearClienteRapidoDto
     {
         public string Nombre { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
         public string? Email { get; set; }
+    }
+    public class ActualizarEstadoClienteDto
+    {
+        [Required]
+        public string EstadoCliente { get; set; } = "activo";
+
+        public DateTime? ProximoContacto { get; set; }
+        public string? NotaSeguimiento { get; set; }
     }
 }
