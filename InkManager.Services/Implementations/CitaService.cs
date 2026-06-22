@@ -628,7 +628,6 @@ namespace InkManager.Services.Implementations
 
             return await GetByIdAsync(id);
         }
-
         public async Task<CitaDto?> ReprogramarAsync(int id, ReprogramarCitaDto dto)
         {
             var cita = await _context.Citas

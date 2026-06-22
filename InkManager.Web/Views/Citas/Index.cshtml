@@ -255,6 +255,7 @@
     </div>
 </div>
 <!-- MODAL EDITAR CITA -->
+<!-- MODAL EDITAR CITA -->
 <div id="modalEditar" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="p-4 md:p-5 border-b sticky top-0 bg-white z-10 rounded-t-xl">
@@ -273,31 +274,59 @@
                 <input type="hidden" id="editCitaId">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Fecha -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Fecha *</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Fecha <span class="text-red-500">*</span>
+                        </label>
                         <input type="date" id="editFechaCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
                     </div>
+
+                    <!-- Hora Inicio -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Hora *</label>
-                        <input type="time" id="editHoraCita" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Hora Inicio <span class="text-red-500">*</span>
+                        </label>
+                        <input type="time" id="editHoraInicio" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
                     </div>
+
+                    <!-- Hora Fin (calculada automáticamente) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Duración</label>
-                        <select id="editDuracion" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Hora Fin
+                        </label>
+                        <input type="time" id="editHoraFin" class="w-full rounded-lg border-gray-300 bg-gray-100" readonly disabled>
+                        <p class="text-xs text-gray-400 mt-1">Se calcula automáticamente según la duración</p>
+                    </div>
+
+                    <!-- Duración -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            Duración <span class="text-red-500">*</span>
+                        </label>
+                        <select id="editDuracion" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" required>
+                            <option value="0.5">30 minutos</option>
                             <option value="1">1 hora</option>
+                            <option value="1.5">1.5 horas</option>
                             <option value="2">2 horas</option>
+                            <option value="2.5">2.5 horas</option>
                             <option value="3">3 horas</option>
                             <option value="4">4 horas</option>
                             <option value="5">5 horas</option>
                             <option value="6">6 horas</option>
+                            <option value="8">8 horas</option>
                         </select>
                     </div>
+
+                    <!-- Zona del Cuerpo -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Zona del Cuerpo</label>
                         <select id="editZonaCuerpoId" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500">
                             <option value="">Seleccionar zona</option>
                         </select>
                     </div>
+
+                    <!-- Precio Total -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Precio Total</label>
                         <div class="relative">
@@ -305,6 +334,8 @@
                             <input type="number" step="0.01" id="editPrecioTotal" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.00">
                         </div>
                     </div>
+
+                    <!-- Adelanto -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Adelanto</label>
                         <div class="relative">
@@ -312,19 +343,32 @@
                             <input type="number" step="0.01" id="editAdelanto" class="w-full pl-7 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.00">
                         </div>
                     </div>
+
+                    <!-- Tamaño -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Tamaño (cm)</label>
                         <input type="number" step="0.1" id="editTamanioCm" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="0.0">
                     </div>
+
+                    <!-- Recordatorio -->
                     <div class="flex items-center">
-                        <input type="checkbox" id="editRequiereRecordatorio" class="rounded border-gray-300 text-purple-600" checked>
-                        <label class="ml-2 text-sm text-gray-700">Enviar recordatorio</label>
+                        <input type="checkbox" id="editRequiereRecordatorio" class="rounded border-gray-300 text-purple-600">
+                        <label class="ml-2 text-sm text-gray-700">📧 Enviar recordatorio</label>
                     </div>
                 </div>
 
+                <!-- Notas -->
                 <div class="mt-4">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Notas Internas</label>
                     <textarea id="editNotasInternas" rows="3" class="w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Detalles del diseño, referencias, instrucciones especiales..."></textarea>
+                </div>
+
+                <!-- Mostrar información adicional -->
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-sm text-blue-700">
+                        <span class="font-semibold">ℹ️ Información:</span>
+                        La hora de fin se calcula automáticamente al seleccionar la hora de inicio y la duración.
+                    </p>
                 </div>
             </form>
         </div>
@@ -1039,7 +1083,6 @@
             </div>
         </div>
 
-        // También agrega el resumen financiero actualizado:
         <div class="bg-gray-50 p-3 rounded-lg">
             <p class="text-xs text-gray-500">Resumen Financiero</p>
             <div class="mt-2 space-y-1">
@@ -1203,7 +1246,6 @@
             const duracion = parseInt(document.getElementById('duracion').value);
             const fotoReferencia = document.getElementById('fotoReferencia').files[0];
 
-            // Logs para depuración
             console.log('Valores capturados:', { clienteId, artistaId, fecha, horaInicio, duracion, selectedZonaId });
 
             // Validaciones básicas
@@ -1223,28 +1265,29 @@
                 return;
             }
 
-            // Limpiar el formato de hora - esperamos algo como "09:00"
-            // Si viene con formato raro, extraer solo los primeros 5 caracteres
+            // Limpiar el formato de hora
             if (horaInicio && horaInicio.length > 5) {
                 horaInicio = horaInicio.substring(0, 5);
             }
 
-            // Asegurar que tenga formato HH:MM
             if (horaInicio && !horaInicio.includes(':')) {
                 horaInicio = `${horaInicio.padStart(2, '0')}:00`;
             }
 
             console.log('Hora formateada:', horaInicio);
 
-            const fechaHoraInicioStr = `${fecha}T${horaInicio}`;
-            console.log('fechaHoraInicioStr:', fechaHoraInicioStr);
+            // CONSTRUIR FECHA CORRECTAMENTE
+            const [year, month, day] = fecha.split('-').map(Number);
+            const [hours, minutes] = horaInicio.split(':').map(Number);
 
-            const fechaHoraInicio = new Date(fechaHoraInicioStr);
-            console.log('fechaHoraInicio objeto:', fechaHoraInicio);
+            // Mes en JavaScript es 0-indexado (0 = Enero)
+            const fechaHoraInicio = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+            console.log('fechaHoraInicio construida:', fechaHoraInicio);
 
             // Validar que la fecha sea válida
             if (isNaN(fechaHoraInicio.getTime())) {
-                showToast(`Formato de fecha/hora inválido: ${fechaHoraInicioStr}`, 'error');
+                showToast(`Formato de fecha/hora inválido`, 'error');
                 return;
             }
 
@@ -1255,11 +1298,23 @@
                 return;
             }
 
+            // 🔥 IMPORTANTE: Función para formatear fecha en ISO local (sin conversión UTC)
+            function formatLocalISO(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const h = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                const sec = String(date.getSeconds()).padStart(2, '0');
+                return `${y}-${m}-${d}T${h}:${min}:${sec}`;
+            }
+
             const formData = new FormData();
             formData.append('UsuarioId', clienteId);
             formData.append('ArtistaReferenciaId', artistaId);
-            formData.append('FechaHoraInicio', fechaHoraInicio.toISOString());
-            formData.append('FechaHoraFin', fechaHoraFin.toISOString());
+            // ⚠️ Usar formatLocalISO en lugar de toISOString()
+            formData.append('FechaHoraInicio', formatLocalISO(fechaHoraInicio));
+            formData.append('FechaHoraFin', formatLocalISO(fechaHoraFin));
             formData.append('PrecioTotal', document.getElementById('precioTotal').value || '0');
             formData.append('Adelanto', document.getElementById('adelanto').value || '0');
             formData.append('ZonaCuerpoId', selectedZonaId);
@@ -1270,6 +1325,9 @@
             if (fotoReferencia) {
                 formData.append('FotoReferencia', fotoReferencia);
             }
+
+            console.log('fechaHoraInicio ISO local:', formatLocalISO(fechaHoraInicio));
+            console.log('fechaHoraFin ISO local:', formatLocalISO(fechaHoraFin));
 
             const btn = document.getElementById('btnGuardar');
             btn.disabled = true;
@@ -1297,7 +1355,8 @@
                 btn.disabled = false;
                 btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Guardar Cita';
             }
-        };        document.getElementById('fotoReferencia')?.addEventListener('change', function(e) {
+        };
+        document.getElementById('fotoReferencia')?.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
@@ -1330,6 +1389,7 @@
         }
 
         // Abrir modal de edición
+        // Abrir modal de edición
         window.abrirModalEditar = async function(id) {
             try {
                 const response = await fetch(`/api/citas/${id}`);
@@ -1337,14 +1397,50 @@
 
                 if (result.success) {
                     const cita = result.data;
+
+                    // Crear fechas correctamente
                     const fechaInicio = new Date(cita.fechaHoraInicio);
                     const fechaFin = new Date(cita.fechaHoraFin);
-                    const duracion = (fechaFin - fechaInicio) / (60 * 60 * 1000);
+
+                    // Calcular duración en horas
+                    const duracionMs = fechaFin - fechaInicio;
+                    const duracionHoras = duracionMs / (60 * 60 * 1000);
+
+                    // Redondear a la media hora más cercana para el select
+                    const duracionRedondeada = Math.round(duracionHoras * 2) / 2;
+                    const duracionParaSelect = duracionRedondeada.toString();
+
+                    // Formatear fecha para input type="date" (YYYY-MM-DD)
+                    const year = fechaInicio.getFullYear();
+                    const month = String(fechaInicio.getMonth() + 1).padStart(2, '0');
+                    const day = String(fechaInicio.getDate()).padStart(2, '0');
+                    const fechaFormateada = `${year}-${month}-${day}`;
+
+                    // Formatear hora para input type="time" (HH:MM en 24 horas)
+                    const horas = String(fechaInicio.getHours()).padStart(2, '0');
+                    const minutos = String(fechaInicio.getMinutes()).padStart(2, '0');
+                    const horaFormateada = `${horas}:${minutos}`;
 
                     document.getElementById('editCitaId').value = cita.id;
-                    document.getElementById('editFechaCita').value = fechaInicio.toISOString().split('T')[0];
-                    document.getElementById('editHoraCita').value = fechaInicio.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                    document.getElementById('editDuracion').value = duracion;
+                    document.getElementById('editFechaCita').value = fechaFormateada;
+                    document.getElementById('editHoraInicio').value = horaFormateada;
+
+                    // Establecer duración
+                    const duracionSelect = document.getElementById('editDuracion');
+                    if (duracionSelect.querySelector(`option[value="${duracionParaSelect}"]`)) {
+                        duracionSelect.value = duracionParaSelect;
+                    } else {
+                        // Si no existe, agregarlo
+                        const option = document.createElement('option');
+                        option.value = duracionParaSelect;
+                        option.textContent = `${duracionParaSelect} horas`;
+                        duracionSelect.appendChild(option);
+                        duracionSelect.value = duracionParaSelect;
+                    }
+
+                    // Calcular y mostrar hora fin
+                    calcularHoraFinEditar();
+
                     document.getElementById('editPrecioTotal').value = cita.precioTotal;
                     document.getElementById('editAdelanto').value = cita.adelanto;
                     document.getElementById('editTamanioCm').value = cita.tamanioCm || '';
@@ -1356,23 +1452,72 @@
                     document.getElementById('modalEditar').classList.add('flex');
                 }
             } catch (error) {
+                console.error('Error:', error);
                 showToast('Error al cargar los datos de la cita', 'error');
             }
         };
+        function calcularHoraFinEditar() {
+            const fecha = document.getElementById('editFechaCita').value;
+            const horaInicio = document.getElementById('editHoraInicio').value;
+            const duracion = parseFloat(document.getElementById('editDuracion').value);
+
+            if (!fecha || !horaInicio || !duracion) {
+                document.getElementById('editHoraFin').value = '';
+                return;
+            }
+
+            try {
+                const [year, month, day] = fecha.split('-').map(Number);
+                const [hours, minutes] = horaInicio.split(':').map(Number);
+
+                // Mes en JavaScript es 0-indexado
+                const fechaInicio = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+                // Sumar duración
+                const fechaFin = new Date(fechaInicio);
+                fechaFin.setHours(fechaFin.getHours() + duracion);
+
+                // Formatear hora para mostrar (HH:MM en 24 horas)
+                const horasFin = String(fechaFin.getHours()).padStart(2, '0');
+                const minutosFin = String(fechaFin.getMinutes()).padStart(2, '0');
+                const horaFinFormateada = `${horasFin}:${minutosFin}`;
+
+                document.getElementById('editHoraFin').value = horaFinFormateada;
+            } catch (error) {
+                console.error('Error calculando hora fin:', error);
+                document.getElementById('editHoraFin').value = '';
+            }
+        }
+
+        // Event listeners para cálculo automático
+        document.getElementById('editHoraInicio')?.addEventListener('change', calcularHoraFinEditar);
+        document.getElementById('editDuracion')?.addEventListener('change', calcularHoraFinEditar);
 
         window.cerrarModalEditar = function() {
             document.getElementById('modalEditar').classList.add('hidden');
             document.getElementById('modalEditar').classList.remove('flex');
         };
 
+
         window.guardarEdicion = async function() {
             const id = document.getElementById('editCitaId').value;
             const fecha = document.getElementById('editFechaCita').value;
-            const horaInicio = document.getElementById('editHoraCita').value;
-            const duracion = parseInt(document.getElementById('editDuracion').value);
+            const horaInicio = document.getElementById('editHoraInicio').value;
+            const duracion = parseFloat(document.getElementById('editDuracion').value);
 
-            if (!fecha || !horaInicio) {
-                showToast('Selecciona fecha y hora', 'error');
+            // Validaciones
+            if (!fecha) {
+                showToast('Selecciona una fecha', 'error');
+                return;
+            }
+
+            if (!horaInicio) {
+                showToast('Selecciona la hora de inicio', 'error');
+                return;
+            }
+
+            if (!duracion || duracion <= 0) {
+                showToast('Selecciona una duración válida', 'error');
                 return;
             }
 
@@ -1385,12 +1530,30 @@
                 return;
             }
 
-            const fechaHoraInicio = new Date(`${fecha}T${horaInicio}`);
-            const fechaHoraFin = new Date(fechaHoraInicio.getTime() + duracion * 60 * 60 * 1000);
+            // CONSTRUIR FECHA CORRECTAMENTE
+            const [year, month, day] = fecha.split('-').map(Number);
+            const [hours, minutes] = horaInicio.split(':').map(Number);
+
+            // Crear fecha local
+            const fechaHoraInicio = new Date(year, month - 1, day, hours, minutes, 0, 0);
+            const fechaHoraFin = new Date(fechaHoraInicio);
+            fechaHoraFin.setHours(fechaHoraFin.getHours() + duracion);
+
+            // 🔥 IMPORTANTE: Enviar en formato ISO local (sin conversión a UTC)
+            // Formato: YYYY-MM-DDTHH:mm:ss (sin la Z al final)
+            function formatLocalISO(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const h = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                const sec = String(date.getSeconds()).padStart(2, '0');
+                return `${y}-${m}-${d}T${h}:${min}:${sec}`;
+            }
 
             const data = {
-                fechaHoraInicio: fechaHoraInicio.toISOString(),
-                fechaHoraFin: fechaHoraFin.toISOString(),
+                fechaHoraInicio: formatLocalISO(fechaHoraInicio),
+                fechaHoraFin: formatLocalISO(fechaHoraFin),
                 precioTotal: parseFloat(document.getElementById('editPrecioTotal').value) || 0,
                 adelanto: parseFloat(document.getElementById('editAdelanto').value) || 0,
                 tamanioCm: parseFloat(document.getElementById('editTamanioCm').value) || null,
@@ -1398,6 +1561,16 @@
                 notasInternas: document.getElementById('editNotasInternas').value,
                 requiereRecordatorio: document.getElementById('editRequiereRecordatorio').checked
             };
+
+            console.log('fechaHoraInicio local:', fechaHoraInicio);
+            console.log('fechaHoraInicio ISO local:', formatLocalISO(fechaHoraInicio));
+            console.log('Datos a enviar:', data);
+
+            // Validar que la hora fin sea posterior a la hora inicio
+            if (fechaHoraFin <= fechaHoraInicio) {
+                showToast('La hora de fin debe ser posterior a la hora de inicio', 'error');
+                return;
+            }
 
             const btn = document.getElementById('btnGuardarEdicion');
             btn.disabled = true;
@@ -1417,19 +1590,20 @@
                     cerrarModalEditar();
                     if (calendar) calendar.refetchEvents();
                     cargarProximasCitas();
-                    if (currentCitaId === id) verDetalleCita(id);
+                    if (currentCitaId === parseInt(id)) {
+                        await verDetalleCita(id);
+                    }
                 } else {
                     showToast(result.message || 'Error al actualizar', 'error');
                 }
             } catch (error) {
+                console.error('Error:', error);
                 showToast('Error de conexión', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Guardar Cambios';
             }
-        };
-
-        // Cargar zonas al iniciar
+        };        
         cargarZonasParaEdicion();
         function limpiarImagen() {
             document.getElementById('fotoReferencia').value = '';

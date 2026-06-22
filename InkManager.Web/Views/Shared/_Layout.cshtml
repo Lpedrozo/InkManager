@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
     <title>@ViewData["Title"] - InkManager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="~/css/tailwind.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -167,19 +167,10 @@
                 <a href="/configuracion" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
                     <span class="mr-3">⚙️</span> Configuración
                 </a>
+                <a href="/logout" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-800 hover:text-white transition">
+                    <span class="mr-3">👤</span> Salir
+                </a>
             </nav>
-
-            <div class="p-6 border-t border-gray-800">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                        <span class="text-sm">👤</span>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium" id="userNameNav">Juan Pérez</p>
-                        <p class="text-xs text-gray-400" id="userRolNav">Artista</p>
-                    </div>
-                </div>
-            </div>
         </aside>
 
         <!-- Botón menú hamburguesa para móvil -->
